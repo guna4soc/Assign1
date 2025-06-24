@@ -1,36 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
   Paper,
   Grid,
   Card,
+  CardContent,
   TextField,
   Button,
   AppBar,
   Toolbar,
   Container,
   CssBaseline,
-  useTheme,
-  alpha,
-  styled,
   Tabs,
   Tab,
   MenuItem,
   Select,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Switch,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Switch,
+  IconButton,
+  Snackbar,
+  Alert,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SaveIcon from "@mui/icons-material/Save";
+import CloseIcon from "@mui/icons-material/Close";
+import DownloadIcon from "@mui/icons-material/Download";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import PendingIcon from "@mui/icons-material/Pending";
+import LockIcon from "@mui/icons-material/Lock";
 import {
   BarChart,
   Bar,
@@ -44,12 +52,31 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import DownloadIcon from "@mui/icons-material/Download";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import PendingIcon from "@mui/icons-material/Pending";
-import LockIcon from "@mui/icons-material/Lock";
 
-// --- Types ---
+// Use a light, professional pink gradient for the header
+const HEADER_COLOR = "#b71c5a"; // Deep rose for text (official, not too bright)
+const HEADER_BG_GRADIENT = "linear-gradient(90deg, #fce4ec 0%, #f8bbd0 100%)"; // Light pink gradient
+
+const summaryCardColors = [
+  "#1976d2", // blue
+  "#43a047", // green
+  "#ffb300", // amber
+  "#ffd600", // gold for Driver Rating
+  "#8e24aa", // purple
+  "#f4511e", // orange
+];
+const pieColors = ["#1976d2", "#43a047", "#ffb300", "#e53935"];
+const validDays = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+const validReasons = ["traffic", "vehicle issue", "weather", "other"];
+
 interface DeliverySummary {
   totalKm: number;
   fuelUsage: number;
@@ -80,8 +107,9 @@ interface Report {
   status: string;
   type: string;
 }
+type DeliveryDayEntry = { day: string; count: number };
+type DelayReasonEntry = { reason: string; count: number };
 
-// --- Data ---
 const defaultDeliverySummary: DeliverySummary = {
   totalKm: 1250.5,
   fuelUsage: 350.7,
@@ -111,115 +139,116 @@ const initialReports: Report[] = [
   { id: 3, title: "Fuel Efficiency Analysis", date: "2025-04-10", status: "Completed", type: "Efficiency" },
 ];
 
-// --- Styled ---
-const HEADER_COLOR = "#1976d2";
-const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  background: "linear-gradient(90deg, #1976d2 0%, #1565c0 100%)",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-  color: "#fff",
-  position: "static",
-  minHeight: 80,
-  justifyContent: "center",
-}));
-const Section = styled(Box)(({ theme }) => ({
-  paddingTop: theme.spacing(4),
-  paddingBottom: theme.spacing(4),
-  [theme.breakpoints.down("sm")]: {
-    paddingTop: theme.spacing(3),
-    paddingBottom: theme.spacing(3),
-  },
-}));
-const CardTitle = styled(Typography)(({ theme }) => ({
-  fontWeight: 700,
-  color: theme.palette.primary.main,
-  letterSpacing: 1,
-  textTransform: "uppercase",
-  marginBottom: theme.spacing(1),
-  fontSize: "1rem",
-}));
-const CardValue = styled(Typography)(({ theme }) => ({
-  fontWeight: 700,
-  fontSize: "1.7rem",
-  color: "#222",
-}));
-const InputLabel = styled(Typography)(({ theme }) => ({
-  fontWeight: 600,
-  fontSize: "0.95rem",
-  color: "#4b5563",
-  marginBottom: theme.spacing(0.5),
-}));
+const STORAGE_KEYS = {
+  deliveryDayEntries: "deliveryDayEntries",
+  delayReasonEntries: "delayReasonEntries",
+  deliveryCounts: "deliveryCounts",
+  delayedReasons: "delayedReasons",
+  profile: "profile",
+  settings: "settings",
+};
 
-const validDays = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-const validReasons = ["traffic", "vehicle issue", "weather", "other"];
-
-const LogisticsDistribution: React.FC = () => {
-  const theme = useTheme();
-  const [activeTab, setActiveTab] = useState(0);
+const DistributionNetwork: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<number>(0);
 
   // Dashboard state
-  const [trackingId, setTrackingId] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [vehicleId, setVehicleId] = useState("");
-  const [deliveryDate, setDeliveryDate] = useState("");
-  const [deliveryCounts, setDeliveryCounts] = useState<DeliveryCountByDay>({ ...defaultDeliveryCountByDay });
-  const [deliveryDayForm, setDeliveryDayForm] = useState({ day: "", count: "" });
-  const [deliveryDayError, setDeliveryDayError] = useState({ day: "", count: "" });
-  const [deliveryDayEntries, setDeliveryDayEntries] = useState<{ day: string; count: number }[]>([]);
-  const [delayedReasons, setDelayedReasons] = useState<DelayedDeliveryReasons>({ ...defaultDelayedReasons });
-  const [delayReasonForm, setDelayReasonForm] = useState({ reason: "", count: "" });
-  const [delayReasonError, setDelayReasonError] = useState({ reason: "", count: "" });
-  const [delayReasonEntries, setDelayReasonEntries] = useState<{ reason: string; count: number }[]>([]);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [deliveryCounts, setDeliveryCounts] = useState<DeliveryCountByDay>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.deliveryCounts);
+    return saved ? JSON.parse(saved) : { ...defaultDeliveryCountByDay };
+  });
+  const [deliveryDayForm, setDeliveryDayForm] = useState<{ day: string; count: string }>({ day: "", count: "" });
+  const [deliveryDayError, setDeliveryDayError] = useState<{ day: string; count: string }>({ day: "", count: "" });
+  const [deliveryDayEntries, setDeliveryDayEntries] = useState<DeliveryDayEntry[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.deliveryDayEntries);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [editingDeliveryIndex, setEditingDeliveryIndex] = useState<number | null>(null);
+  const [editingDelivery, setEditingDelivery] = useState<DeliveryDayEntry>({ day: "", count: 0 });
+
+  const [delayedReasons, setDelayedReasons] = useState<DelayedDeliveryReasons>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.delayedReasons);
+    return saved ? JSON.parse(saved) : { ...defaultDelayedReasons };
+  });
+  const [delayReasonForm, setDelayReasonForm] = useState<{ reason: string; count: string }>({ reason: "", count: "" });
+  const [delayReasonError, setDelayReasonError] = useState<{ reason: string; count: string }>({ reason: "", count: "" });
+  const [delayReasonEntries, setDelayReasonEntries] = useState<DelayReasonEntry[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.delayReasonEntries);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [editingDelayIndex, setEditingDelayIndex] = useState<number | null>(null);
+  const [editingDelay, setEditingDelay] = useState<DelayReasonEntry>({ reason: "", count: 0 });
+
   const [deliverySummary] = useState<DeliverySummary>(defaultDeliverySummary);
 
   // Reports state
-  const [reports, setReports] = useState<Report[]>(initialReports);
-  const [reportFilter, setReportFilter] = useState("All");
+  const [reports] = useState<Report[]>(initialReports);
+  const [reportFilter, setReportFilter] = useState<string>("All");
 
   // Settings state
-  const [language, setLanguage] = useState("English");
-  const [notifications, setNotifications] = useState(true);
-  const [profile, setProfile] = useState({ name: "John Doe", email: "john@logistics.com" });
-  const [password, setPassword] = useState({ old: "", new: "", confirm: "" });
-  const [passwordError, setPasswordError] = useState("");
+  const [profile, setProfile] = useState<{ name: string; email: string }>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.profile);
+    return saved ? JSON.parse(saved) : { name: "John Doe", email: "john@logistics.com" };
+  });
+  const [profileEdit, setProfileEdit] = useState<{ name: string; email: string }>({ name: profile.name, email: profile.email });
+  const [profileDialogOpen, setProfileDialogOpen] = useState<boolean>(false);
+  const [profileSaved, setProfileSaved] = useState<boolean>(false);
+  const [profileError, setProfileError] = useState<{ name?: string; email?: string }>({});
+  const [language, setLanguage] = useState<string>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.settings);
+    return saved ? JSON.parse(saved).language : "English";
+  });
+  const [notifications, setNotifications] = useState<boolean>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.settings);
+    return saved ? JSON.parse(saved).notifications : true;
+  });
+  const [password, setPassword] = useState<{ old: string; new: string; confirm: string }>({ old: "", new: "", confirm: "" });
+  const [passwordError, setPasswordError] = useState<string>("");
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState<boolean>(false);
 
-  // Colors
-  const primaryColor = HEADER_COLOR;
-  const cardBgColor = "#f9fafb";
-  const textColor = "#374151";
-  const summaryCardColors = [
-    "#1976d2",
-    "#009688",
-    "#3949ab",
-    "#ffb300",
-    "#8e24aa",
-    "#607d8b",
-  ];
-  const pieColors = ["#1976d2", "#43a047", "#ffb300", "#e53935"];
+  // Persist dashboard data
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.deliveryDayEntries, JSON.stringify(deliveryDayEntries));
+  }, [deliveryDayEntries]);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.delayReasonEntries, JSON.stringify(delayReasonEntries));
+  }, [delayReasonEntries]);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.deliveryCounts, JSON.stringify(deliveryCounts));
+  }, [deliveryCounts]);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.delayedReasons, JSON.stringify(delayedReasons));
+  }, [delayedReasons]);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(profile));
+  }, [profile]);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify({ language, notifications }));
+  }, [language, notifications]);
 
-  // Validations
-  const validateNonNegativeNumber = (value: string) => {
+  // --- Validations ---
+  const validateNonNegativeNumber = (value: string): string => {
     if (!value.trim()) return "Required";
     const num = Number(value);
     if (isNaN(num) || num < 0) return "Must be a non-negative number";
     return "";
   };
-  const validateDay = (value: string) => {
-    if (!validDays.includes(value.trim()))
-      return "Day must be a valid weekday (e.g. Monday).";
+  const validateDay = (value: string): string => {
+    if (!validDays.includes(value.trim())) return "Day must be a valid weekday (e.g. Monday).";
     return "";
   };
-  const validateDelayReason = (value: string) => {
+  const validateDelayReason = (value: string): string => {
     if (!validReasons.includes(value.trim().toLowerCase()))
       return "Reason must be one of: traffic, vehicle issue, weather, other.";
+    return "";
+  };
+  const validateEmail = (email: string): string => {
+    if (!/^[a-z0-9._%+-]+@(gmail|outlook)\.com$/.test(email))
+      return "Email must be all lowercase and end with @gmail.com or @outlook.com";
+    return "";
+  };
+  const validateName = (name: string): string => {
+    if (!/^[A-Z][a-zA-Z\s]*$/.test(name))
+      return "Name must start with a capital letter and contain only letters/spaces";
     return "";
   };
 
@@ -240,9 +269,31 @@ const LogisticsDistribution: React.FC = () => {
     ]);
     setDeliveryCounts((prev) => ({
       ...prev,
-      [deliveryDayForm.day]: Number(deliveryDayForm.count),
+      [deliveryDayForm.day as keyof DeliveryCountByDay]: Number(deliveryDayForm.count),
     }));
     setDeliveryDayForm({ day: "", count: "" });
+  };
+  // Edit/Save/Delete for DeliveryDayEntry
+  const handleEditDelivery = (idx: number) => {
+    setEditingDeliveryIndex(idx);
+    setEditingDelivery({ ...deliveryDayEntries[idx] });
+  };
+  const handleSaveDelivery = (idx: number) => {
+    if (!editingDelivery.day || isNaN(Number(editingDelivery.count))) return;
+    const entries = [...deliveryDayEntries];
+    entries[idx] = { ...editingDelivery };
+    setDeliveryDayEntries(entries);
+    setDeliveryCounts((prev) => ({
+      ...prev,
+      [editingDelivery.day as keyof DeliveryCountByDay]: Number(editingDelivery.count),
+    }));
+    setEditingDeliveryIndex(null);
+  };
+  const handleDeleteDelivery = (idx: number) => {
+    const entries = [...deliveryDayEntries];
+    entries.splice(idx, 1);
+    setDeliveryDayEntries(entries);
+    setEditingDeliveryIndex(null);
   };
 
   // Delay Reason form handlers
@@ -266,31 +317,73 @@ const LogisticsDistribution: React.FC = () => {
     }));
     setDelayReasonForm({ reason: "", count: "" });
   };
-
-  // Tracking form handlers (unchanged)
-  const validateRequiredText = (field: string, value: string) => (!value.trim() ? "Required" : "");
-  const handleTrackSubmit = () => {
-    const errorsTmp = {
-      trackingId: validateRequiredText("trackingId", trackingId),
-      customerName: validateRequiredText("customerName", customerName),
-      vehicleId: validateRequiredText("vehicleId", vehicleId),
-      deliveryDate: validateRequiredText("deliveryDate", deliveryDate),
-    };
-    setErrors(errorsTmp);
-    if (Object.values(errorsTmp).some((e) => e !== "")) return;
-    alert(
-      `Tracking delivery:\n- Tracking ID: ${trackingId}\n- Customer: ${customerName}\n- Vehicle: ${vehicleId}\n- Delivery Date: ${deliveryDate}`
-    );
-    setTrackingId("");
-    setCustomerName("");
-    setVehicleId("");
-    setDeliveryDate("");
+  // Edit/Save/Delete for DelayReasonEntry
+  const handleEditDelay = (idx: number) => {
+    setEditingDelayIndex(idx);
+    setEditingDelay({ ...delayReasonEntries[idx] });
+  };
+  const handleSaveDelay = (idx: number) => {
+    if (!editingDelay.reason || isNaN(Number(editingDelay.count))) return;
+    const entries = [...delayReasonEntries];
+    entries[idx] = { ...editingDelay };
+    setDelayReasonEntries(entries);
+    setDelayedReasons((prev) => ({
+      ...prev,
+      [editingDelay.reason as keyof DelayedDeliveryReasons]: Number(editingDelay.count),
+    }));
+    setEditingDelayIndex(null);
+  };
+  const handleDeleteDelay = (idx: number) => {
+    const entries = [...delayReasonEntries];
+    entries.splice(idx, 1);
+    setDelayReasonEntries(entries);
+    setEditingDelayIndex(null);
   };
 
-  // Reports logic (unchanged)
+  // Reports
   const filteredReports = reportFilter === "All" ? reports : reports.filter((r) => r.type === reportFilter);
   const handleReportDownload = (report: Report) => {
-    alert(`Downloading report: ${report.title}`);
+    const csv = `Title,Date,Status,Type\n${report.title},${report.date},${report.status},${report.type}`;
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${report.title.replace(/\s/g, "_")}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Settings
+  const handleProfileEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setProfileEdit((prev) => ({ ...prev, [name]: value }));
+    if (name === "email") setProfileError((prev) => ({ ...prev, email: validateEmail(value) }));
+    if (name === "name") setProfileError((prev) => ({ ...prev, name: validateName(value) }));
+  };
+  const handleProfileSave = () => {
+    const nameErr = validateName(profileEdit.name);
+    const emailErr = validateEmail(profileEdit.email);
+    setProfileError({ name: nameErr, email: emailErr });
+    if (nameErr || emailErr) return;
+    setProfile(profileEdit);
+    setProfileSaved(true);
+    setTimeout(() => setProfileSaved(false), 1500);
+    setProfileDialogOpen(false);
+  };
+
+  const handlePasswordSave = () => {
+    if (!password.old || !password.new || !password.confirm) {
+      setPasswordError("All fields required");
+      return;
+    }
+    if (password.new !== password.confirm) {
+      setPasswordError("New passwords do not match");
+      return;
+    }
+    setPasswordError("");
+    setPassword({ old: "", new: "", confirm: "" });
+    setPasswordDialogOpen(false);
+    alert("Password changed successfully!");
   };
 
   // Charts data
@@ -305,16 +398,21 @@ const LogisticsDistribution: React.FC = () => {
     { name: "Other", value: delayedReasons.other },
   ];
 
+  // --- UI ---
   return (
-    <Box sx={{ minHeight: "100vh", color: textColor }}>
+    <Box sx={{ minHeight: "100vh" }}>
       <CssBaseline />
-      <StyledAppBar elevation={0}>
+      <AppBar position="static" sx={{
+        background: 'linear-gradient(90deg, #fce4ec 0%, #f8bbd0 100%)', // light pink gradient
+        minHeight: 80,
+        boxShadow: '0 2px 8px 0 rgba(216,27,96,0.08)',
+      }}>
         <Toolbar sx={{ justifyContent: "center", minHeight: 80 }}>
           <Typography
             variant="h4"
             sx={{
               fontWeight: "bold",
-              color: "#fff",
+              color: "#b71c5a", // deep rose for professional look
               letterSpacing: 2,
               textAlign: "center",
               width: "100%",
@@ -323,7 +421,7 @@ const LogisticsDistribution: React.FC = () => {
             LogiTrack Dashboard
           </Typography>
         </Toolbar>
-      </StyledAppBar>
+      </AppBar>
       <Container maxWidth="lg" sx={{ pt: 4, pb: 4 }}>
         <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
           <Tabs
@@ -349,61 +447,70 @@ const LogisticsDistribution: React.FC = () => {
             <Tab label="Settings" />
           </Tabs>
         </Box>
-        {activeTab === 0 && (
-          <>
-            {/* Summary Overview */}
-            <Section>
-              <Typography variant="h5" fontWeight={700} mb={3}>
-                Summary Overview
-              </Typography>
-              <Grid container spacing={2}>
-                {Object.entries(deliverySummary).map(([key, value], idx) => (
-                  <Grid item xs={12} sm={6} md={4} lg={2} key={key}>
-                    <Card
-                      sx={{
-                        p: 2,
-                        backgroundColor: alpha(summaryCardColors[idx % summaryCardColors.length], 0.08),
-                        borderLeft: `4px solid ${summaryCardColors[idx % summaryCardColors.length]}`,
-                        borderRadius: 2,
-                        boxShadow: "none",
-                        height: "100%",
-                      }}
-                    >
-                      <CardTitle>
-                        {key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
-                      </CardTitle>
-                      <CardValue>
-                        {typeof value === "number" && key === "driverRating" ? `${value} / 5` : value}
-                        {key === "totalKm" ? " km" : ""}
-                        {key === "fuelUsage" ? " L" : ""}
-                        {key === "avgDeliveryTime" ? " mins" : ""}
-                      </CardValue>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Section>
 
-            {/* Deliveries by Day Input and Record Table */}
-            <Section>
-              <Typography variant="h6" fontWeight={700} mb={2}>
-                Deliveries by Day Entry
-              </Typography>
-              <Paper sx={{ p: 3, mb: 3 }}>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={4} md={3}>
+        {/* Dashboard Tab */}
+        {activeTab === 0 && (
+          <Box>
+            {/* Summary Cards */}
+            <Grid container spacing={3} sx={{ mb: 2, alignItems: "stretch" }}>
+              {[
+                { label: "Total KM", value: deliverySummary.totalKm, icon: <CheckCircleOutlineIcon />, color: summaryCardColors[0] },
+                { label: "Fuel Usage (L)", value: deliverySummary.fuelUsage, icon: <PendingIcon />, color: summaryCardColors[1] },
+                { label: "Items Delivered", value: deliverySummary.itemsDelivered, icon: <CheckCircleOutlineIcon />, color: summaryCardColors[2] },
+                { label: "Driver Rating", value: deliverySummary.driverRating, icon: <CheckCircleOutlineIcon />, color: summaryCardColors[3] },
+                { label: "Avg Delivery Time (min)", value: deliverySummary.avgDeliveryTime, icon: <PendingIcon />, color: summaryCardColors[4] },
+                { label: "Scheduled Deliveries", value: deliverySummary.scheduledDeliveries, icon: <CheckCircleOutlineIcon />, color: summaryCardColors[5] },
+              ].map((card, idx) => (
+                <Grid item xs={12} sm={6} md={4} key={idx}>
+                  <Card
+                    sx={{
+                      height: 140,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: card.color,
+                      color: "#fff",
+                      borderRadius: 3,
+                      boxShadow: 2,
+                    }}
+                  >
+                    <Box sx={{ fontSize: 34, mb: 1 }}>{card.icon}</Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500, opacity: 0.95 }}>
+                      {card.label}
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
+                      {card.value}
+                    </Typography>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Editable Tables */}
+            <Grid container spacing={3} alignItems="flex-start">
+              {/* Delivery Day Entry Table */}
+              <Grid item xs={12} md={6}>
+                <Paper sx={{ p: 3, borderRadius: 3, boxShadow: 2 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: HEADER_COLOR, mb: 1 }}>
+                    Add/Edit Deliveries by Day
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
                     <TextField
                       label="Day"
                       name="day"
+                      select
                       value={deliveryDayForm.day}
                       onChange={handleDeliveryDayFormChange}
                       error={!!deliveryDayError.day}
                       helperText={deliveryDayError.day}
-                      fullWidth
                       size="small"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={4} md={3}>
+                      sx={{ width: 120 }}
+                    >
+                      {validDays.map((d) => (
+                        <MenuItem key={d} value={d}>{d}</MenuItem>
+                      ))}
+                    </TextField>
                     <TextField
                       label="Count"
                       name="count"
@@ -411,78 +518,98 @@ const LogisticsDistribution: React.FC = () => {
                       onChange={handleDeliveryDayFormChange}
                       error={!!deliveryDayError.count}
                       helperText={deliveryDayError.count}
-                      fullWidth
                       size="small"
+                      sx={{ width: 100 }}
                     />
-                  </Grid>
-                  <Grid item xs={12} sm={4} md={3}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handleAddDeliveryDay}
-                      sx={{ mt: { xs: 1, sm: 0 } }}
-                    >
-                      Add Entry
+                    <Button variant="contained" color="primary" onClick={handleAddDeliveryDay} sx={{ minWidth: 90 }}>
+                      Add
                     </Button>
-                  </Grid>
-                </Grid>
-                {deliveryDayEntries.length > 0 && (
-                  <TableContainer sx={{ mt: 3 }}>
-                    <Table>
+                  </Box>
+                  <TableContainer>
+                    <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>Day</TableCell>
-                          <TableCell>Count</TableCell>
+                          <TableCell sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd' }}>Day</TableCell>
+                          <TableCell sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd' }}>Count</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd' }}>Actions</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {deliveryDayEntries.map((entry, idx) => (
                           <TableRow key={idx}>
-                            <TableCell>{entry.day}</TableCell>
-                            <TableCell>{entry.count}</TableCell>
+                            <TableCell>
+                              {editingDeliveryIndex === idx ? (
+                                <TextField
+                                  name="day"
+                                  select
+                                  value={editingDelivery.day}
+                                  onChange={(e) => setEditingDelivery((prev) => ({ ...prev, day: e.target.value }))}
+                                  size="small"
+                                  sx={{ width: 100 }}
+                                >
+                                  {validDays.map((d) => (
+                                    <MenuItem key={d} value={d}>{d}</MenuItem>
+                                  ))}
+                                </TextField>
+                              ) : (
+                                entry.day
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {editingDeliveryIndex === idx ? (
+                                <TextField
+                                  name="count"
+                                  value={editingDelivery.count}
+                                  onChange={(e) => setEditingDelivery((prev) => ({ ...prev, count: Number(e.target.value) }))}
+                                  size="small"
+                                  sx={{ width: 80 }}
+                                />
+                              ) : (
+                                entry.count
+                              )}
+                            </TableCell>
+                            <TableCell align="right">
+                              {editingDeliveryIndex === idx ? (
+                                <>
+                                  <IconButton color="success" onClick={() => handleSaveDelivery(idx)}><SaveIcon /></IconButton>
+                                  <IconButton color="error" onClick={() => setEditingDeliveryIndex(null)}><CloseIcon /></IconButton>
+                                </>
+                              ) : (
+                                <>
+                                  <IconButton color="primary" onClick={() => handleEditDelivery(idx)}><EditIcon /></IconButton>
+                                  <IconButton color="error" onClick={() => handleDeleteDelivery(idx)}><DeleteIcon /></IconButton>
+                                </>
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
-                )}
-              </Paper>
-              <Paper sx={{ p: 3, borderRadius: 3, mb: 2 }}>
-                <Typography variant="h6" fontWeight={700} mb={2}>
-                  Deliveries by Day
-                </Typography>
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={deliveryCountsForChart}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" stroke={primaryColor} />
-                    <YAxis stroke={primaryColor} />
-                    <ReTooltip />
-                    <Bar dataKey="value" fill="#1976d2" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Section>
-
-            {/* Delay Reasons Input and Record Table */}
-            <Section>
-              <Typography variant="h6" fontWeight={700} mb={2}>
-                Delay Reasons Entry
-              </Typography>
-              <Paper sx={{ p: 3, mb: 3 }}>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={4} md={3}>
+                </Paper>
+              </Grid>
+              {/* Delay Reasons Table */}
+              <Grid item xs={12} md={6}>
+                <Paper sx={{ p: 3, borderRadius: 3, boxShadow: 2 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: HEADER_COLOR, mb: 1 }}>
+                    Add/Edit Delay Reasons
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
                     <TextField
                       label="Reason"
                       name="reason"
+                      select
                       value={delayReasonForm.reason}
                       onChange={handleDelayReasonFormChange}
                       error={!!delayReasonError.reason}
                       helperText={delayReasonError.reason}
-                      fullWidth
                       size="small"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={4} md={3}>
+                      sx={{ width: 140 }}
+                    >
+                      {validReasons.map((r) => (
+                        <MenuItem key={r} value={r}>{r}</MenuItem>
+                      ))}
+                    </TextField>
                     <TextField
                       label="Count"
                       name="count"
@@ -490,234 +617,336 @@ const LogisticsDistribution: React.FC = () => {
                       onChange={handleDelayReasonFormChange}
                       error={!!delayReasonError.count}
                       helperText={delayReasonError.count}
-                      fullWidth
                       size="small"
+                      sx={{ width: 100 }}
                     />
-                  </Grid>
-                  <Grid item xs={12} sm={4} md={3}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handleAddDelayReason}
-                      sx={{ mt: { xs: 1, sm: 0 } }}
-                    >
-                      Add Entry
+                    <Button variant="contained" color="primary" onClick={handleAddDelayReason} sx={{ minWidth: 90 }}>
+                      Add
                     </Button>
-                  </Grid>
-                </Grid>
-                {delayReasonEntries.length > 0 && (
-                  <TableContainer sx={{ mt: 3 }}>
-                    <Table>
+                  </Box>
+                  <TableContainer>
+                    <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>Reason</TableCell>
-                          <TableCell>Count</TableCell>
+                          <TableCell sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd' }}>Reason</TableCell>
+                          <TableCell sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd' }}>Count</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd' }}>Actions</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {delayReasonEntries.map((entry, idx) => (
                           <TableRow key={idx}>
-                            <TableCell>{entry.reason}</TableCell>
-                            <TableCell>{entry.count}</TableCell>
+                            <TableCell>
+                              {editingDelayIndex === idx ? (
+                                <TextField
+                                  name="reason"
+                                  select
+                                  value={editingDelay.reason}
+                                  onChange={(e) => setEditingDelay((prev) => ({ ...prev, reason: e.target.value }))}
+                                  size="small"
+                                  sx={{ width: 120 }}
+                                >
+                                  {validReasons.map((r) => (
+                                    <MenuItem key={r} value={r}>{r}</MenuItem>
+                                  ))}
+                                </TextField>
+                              ) : (
+                                entry.reason
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {editingDelayIndex === idx ? (
+                                <TextField
+                                  name="count"
+                                  value={editingDelay.count}
+                                  onChange={(e) => setEditingDelay((prev) => ({ ...prev, count: Number(e.target.value) }))}
+                                  size="small"
+                                  sx={{ width: 80 }}
+                                />
+                              ) : (
+                                entry.count
+                              )}
+                            </TableCell>
+                            <TableCell align="right">
+                              {editingDelayIndex === idx ? (
+                                <>
+                                  <IconButton color="success" onClick={() => handleSaveDelay(idx)}><SaveIcon /></IconButton>
+                                  <IconButton color="error" onClick={() => setEditingDelayIndex(null)}><CloseIcon /></IconButton>
+                                </>
+                              ) : (
+                                <>
+                                  <IconButton color="primary" onClick={() => handleEditDelay(idx)}><EditIcon /></IconButton>
+                                  <IconButton color="error" onClick={() => handleDeleteDelay(idx)}><DeleteIcon /></IconButton>
+                                </>
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
-                )}
-              </Paper>
-              <Paper sx={{ p: 3, borderRadius: 3, mb: 2 }}>
-                <Typography variant="h6" fontWeight={700} mb={2}>
-                  Delay Reasons
-                </Typography>
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie
-                      data={delayedReasonsForChart}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label
-                    >
-                      {delayedReasonsForChart.map((entry, idx) => (
-                        <Cell key={entry.name} fill={pieColors[idx % pieColors.length]} />
-                      ))}
-                    </Pie>
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Section>
+                </Paper>
+              </Grid>
+            </Grid>
 
-            {/* Tracking Form */}
-            <Section>
-              <Typography variant="h5" fontWeight={700} mb={3}>
-                Track Your Delivery
-              </Typography>
-              <Paper sx={{ p: 4, borderRadius: 3, backgroundColor: cardBgColor }}>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <InputLabel>Tracking ID *</InputLabel>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={trackingId}
-                      onChange={(e) => setTrackingId(e.target.value)}
-                      error={!!errors.trackingId}
-                      helperText={errors.trackingId}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <InputLabel>Customer Name *</InputLabel>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      error={!!errors.customerName}
-                      helperText={errors.customerName}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <InputLabel>Vehicle ID *</InputLabel>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={vehicleId}
-                      onChange={(e) => setVehicleId(e.target.value)}
-                      error={!!errors.vehicleId}
-                      helperText={errors.vehicleId}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <InputLabel>Expected Delivery Date *</InputLabel>
-                    <TextField
-                      type="date"
-                      fullWidth
-                      size="small"
-                      value={deliveryDate}
-                      onChange={(e) => setDeliveryDate(e.target.value)}
-                      error={!!errors.deliveryDate}
-                      helperText={errors.deliveryDate}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handleTrackSubmit}
-                      sx={{ minWidth: 180, fontWeight: 600, mt: 2 }}
-                    >
-                      Track Delivery
-                    </Button>
-                  </Grid>
-                </Grid>
-              </Paper>
-            </Section>
-          </>
+            {/* Charts BELOW the tables/forms */}
+            <Grid container spacing={3} sx={{ mt: 2 }} alignItems="stretch">
+              {/* Bar Chart */}
+              <Grid item xs={12} md={7}>
+                <Paper sx={{ p: 3, borderRadius: 3, boxShadow: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: HEADER_COLOR }}>
+                    Deliveries by Day
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={deliveryCountsForChart}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="day" />
+                      <YAxis />
+                      <ReTooltip />
+                      <Bar dataKey="value" fill={HEADER_COLOR} radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Paper>
+              </Grid>
+              {/* Pie Chart */}
+              <Grid item xs={12} md={5}>
+                <Paper sx={{ p: 3, borderRadius: 3, boxShadow: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: HEADER_COLOR }}>
+                    Delayed Deliveries Reasons
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={delayedReasonsForChart}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label
+                      >
+                        {delayedReasonsForChart.map((entry, idx) => (
+                          <Cell key={`cell-${idx}`} fill={pieColors[idx % pieColors.length]} />
+                        ))}
+                      </Pie>
+                      <Legend />
+                      <ReTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Paper>
+              </Grid>
+            </Grid>
+          </Box>
         )}
-        {/* REPORTS */}
+
+        {/* Reports Tab */}
         {activeTab === 1 && (
-          <Section>
-            <Typography variant="h5" fontWeight={700} mb={3}>
-              Reports
-            </Typography>
-            <Paper sx={{ p: 3, borderRadius: 2 }}>
-              <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                Download Reports
-              </Typography>
-              <List>
-                {filteredReports.map((report) => (
-                  <ListItem key={report.id} secondaryAction={
-                    <IconButton edge="end" onClick={() => handleReportDownload(report)}>
-                      <DownloadIcon />
-                    </IconButton>
-                  }>
-                    <ListItemIcon>
-                      {report.status === "Completed" ? (
-                        <CheckCircleOutlineIcon color="success" />
-                      ) : (
-                        <PendingIcon color="warning" />
-                      )}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={report.title}
-                      secondary={`Type: ${report.type} | Date: ${report.date}`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
+          <Box>
+            <Paper sx={{ p: 3, borderRadius: 3, boxShadow: 2, mb: 3 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: HEADER_COLOR, flex: 1 }}>
+                  Reports
+                </Typography>
+                <Select
+                  value={reportFilter}
+                  onChange={(e) => setReportFilter(e.target.value)}
+                  size="small"
+                  sx={{ minWidth: 140, background: "transparent", borderRadius: 2 }}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  <MenuItem value="Monthly">Monthly</MenuItem>
+                  <MenuItem value="Performance">Performance</MenuItem>
+                  <MenuItem value="Efficiency">Efficiency</MenuItem>
+                </Select>
+              </Box>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd', width: 220, textAlign: 'center', verticalAlign: 'middle' }}>Title</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd', width: 120, textAlign: 'center', verticalAlign: 'middle' }}>Date</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd', width: 120, textAlign: 'center', verticalAlign: 'middle' }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd', width: 120, textAlign: 'center', verticalAlign: 'middle' }}>Type</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700, color: HEADER_COLOR, background: '#e3f2fd', width: 120, verticalAlign: 'middle' }}>
+                        <span>Actions</span>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredReports.map((report) => (
+                      <TableRow key={report.id} hover sx={{ transition: "background 0.2s", "&:hover": { background: "#e3f2fd" } }}>
+                        <TableCell sx={{ textAlign: 'center', verticalAlign: 'middle', py: 1 }}>{report.title}</TableCell>
+                        <TableCell sx={{ textAlign: 'center', verticalAlign: 'middle', py: 1 }}>{report.date}</TableCell>
+                        <TableCell sx={{ textAlign: 'center', verticalAlign: 'middle', py: 1 }}>
+                          {report.status === "Completed" ? (
+                            <Box sx={{ display: "flex", alignItems: "center", color: "#43a047", justifyContent: 'center' }}>
+                              <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 0.5 }} /> Completed
+                            </Box>
+                          ) : (
+                            <Box sx={{ display: "flex", alignItems: "center", color: "#ffb300", justifyContent: 'center' }}>
+                              <PendingIcon fontSize="small" sx={{ mr: 0.5 }} /> Pending
+                            </Box>
+                          )}
+                        </TableCell>
+                        <TableCell sx={{ textAlign: 'center', verticalAlign: 'middle', py: 1 }}>{report.type}</TableCell>
+                        <TableCell align="center" sx={{ verticalAlign: 'middle', py: 1 }}>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            color="primary"
+                            sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 0, px: 1, mx: 'auto' }}
+                            onClick={() => handleReportDownload(report)}
+                          >
+                            <DownloadIcon color="primary" sx={{ mb: 0.5 }} />
+                            <span style={{ fontSize: 12 }}>Download</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </Paper>
-          </Section>
+          </Box>
         )}
-        {/* SETTINGS */}
+
+        {/* Settings Tab */}
         {activeTab === 2 && (
-          <Section>
-            <Typography variant="h5" fontWeight={700} mb={3}>
-              Settings
-            </Typography>
-            <Paper sx={{ p: 3, borderRadius: 2 }}>
-              <Typography variant="subtitle1" fontWeight={600} mb={2}>
+          <Box>
+            {/* Profile Section */}
+            <Paper sx={{ p: 3, borderRadius: 3, boxShadow: 2, mb: 3 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: HEADER_COLOR, mb: 2 }}>
                 Profile
               </Typography>
-              <Box mb={2}>
-                <InputLabel>Name</InputLabel>
-                <TextField
-                  value={profile.name}
-                  onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
-                  size="small"
-                  sx={{ mr: 2 }}
-                />
-                <InputLabel>Email</InputLabel>
-                <TextField
-                  value={profile.email}
-                  onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))}
-                  size="small"
-                />
-              </Box>
-              <Button variant="contained" onClick={() => {}}>
-                Save Profile
+              <Typography>Name: {profile.name}</Typography>
+              <Typography>Email: {profile.email}</Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ mt: 2, mr: 2 }}
+                onClick={() => setProfileDialogOpen(true)}
+              >
+                Edit Profile
               </Button>
-              <Box mt={3}>
-                <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                  Preferences
-                </Typography>
-                <InputLabel>Language</InputLabel>
-                <Select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value as string)}
-                  size="small"
-                  sx={{ mr: 2, minWidth: 120 }}
-                >
-                  <MenuItem value="English">English</MenuItem>
-                  <MenuItem value="Hindi">Hindi</MenuItem>
-                  <MenuItem value="Spanish">Spanish</MenuItem>
-                </Select>
-                <InputLabel>Notifications</InputLabel>
-                <Switch
-                  checked={notifications}
-                  onChange={() => setNotifications((n) => !n)}
-                  color="primary"
-                />
-              </Box>
-              <Box mt={3}>
-                <Button
-                  variant="outlined"
-                  startIcon={<LockIcon />}
-                  onClick={() => {}}
-                >
-                  Change Password
-                </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                color="warning"
+                startIcon={<LockIcon />}
+                sx={{ mt: 2 }}
+                onClick={() => setPasswordDialogOpen(true)}
+              >
+                Change Password
+              </Button>
+            </Paper>
+            {/* Settings Section */}
+            <Paper sx={{ p: 3, borderRadius: 3, boxShadow: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: HEADER_COLOR, mb: 2 }}>
+                Preferences
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "wrap" }}>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ color: "#666" }}>Language</Typography>
+                  <Select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    size="small"
+                    sx={{ minWidth: 120, background: "transparent", borderRadius: 2 }}
+                  >
+                    <MenuItem value="English">English</MenuItem>
+                    <MenuItem value="Hindi">Hindi</MenuItem>
+                  </Select>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ color: "#666" }}>Notifications</Typography>
+                  <Switch
+                    checked={notifications}
+                    onChange={(e) => setNotifications(e.target.checked)}
+                    color="primary"
+                  />
+                </Box>
               </Box>
             </Paper>
-          </Section>
+          </Box>
         )}
+
+        {/* Profile Edit Dialog */}
+        <Dialog open={profileDialogOpen} onClose={() => setProfileDialogOpen(false)}>
+          <DialogTitle>Edit Profile</DialogTitle>
+          <DialogContent>
+            <TextField
+              label="Name"
+              name="name"
+              value={profileEdit.name}
+              onChange={handleProfileEditChange}
+              error={!!profileError.name}
+              helperText={profileError.name}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Email"
+              name="email"
+              value={profileEdit.email}
+              onChange={handleProfileEditChange}
+              error={!!profileError.email}
+              helperText={profileError.email}
+              fullWidth
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleProfileSave} variant="contained" color="primary">
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Password Change Dialog */}
+        <Dialog open={passwordDialogOpen} onClose={() => setPasswordDialogOpen(false)}>
+          <DialogTitle>Change Password</DialogTitle>
+          <DialogContent>
+            <TextField
+              label="Old Password"
+              type="password"
+              value={password.old}
+              onChange={(e) => setPassword((prev) => ({ ...prev, old: e.target.value }))}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="New Password"
+              type="password"
+              value={password.new}
+              onChange={(e) => setPassword((prev) => ({ ...prev, new: e.target.value }))}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Confirm New Password"
+              type="password"
+              value={password.confirm}
+              onChange={(e) => setPassword((prev) => ({ ...prev, confirm: e.target.value }))}
+              fullWidth
+              error={!!passwordError}
+              helperText={passwordError}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPasswordDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handlePasswordSave} variant="contained" color="primary">
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Profile Saved Snackbar */}
+        <Snackbar open={profileSaved} autoHideDuration={1200}>
+          <Alert severity="success" variant="filled">Profile updated!</Alert>
+        </Snackbar>
       </Container>
     </Box>
   );
 };
 
-export default LogisticsDistribution;
+export default DistributionNetwork;

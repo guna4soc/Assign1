@@ -140,8 +140,16 @@ const SalesAndInventoryDashboard: React.FC = () => {
   const validateSale = () => {
     const errors: { [key: string]: string } = {};
     if (!newSale.date) errors.date = 'Date is required';
-    if (!newSale.retailerName.trim()) errors.retailerName = 'Retailer Name is required';
-    if (!newSale.productName.trim()) errors.productName = 'Product Name is required';
+    if (!newSale.retailerName.trim()) {
+      errors.retailerName = 'Retailer Name is required';
+    } else if (!/^[A-Z][a-zA-Z\s]*$/.test(newSale.retailerName.trim())) {
+      errors.retailerName = 'Retailer Name must start with a capital letter and contain only letters';
+    }
+    if (!newSale.productName.trim()) {
+      errors.productName = 'Product Name is required';
+    } else if (!/^[A-Z][a-zA-Z\s]*$/.test(newSale.productName.trim())) {
+      errors.productName = 'Product Name must start with a capital letter and contain only letters';
+    }
     if (!newSale.quantitySold || newSale.quantitySold < 1) errors.quantitySold = 'Quantity must be at least 1';
     if (!newSale.totalAmount || newSale.totalAmount < 1) errors.totalAmount = 'Amount must be at least 1';
     if (!newSale.paymentStatus) errors.paymentStatus = 'Payment Status is required';
@@ -164,8 +172,8 @@ const SalesAndInventoryDashboard: React.FC = () => {
     const errors: { [key: string]: string } = {};
     if (!newRetailer.retailerName.trim()) {
       errors.retailerName = 'Retailer Name is required';
-    } else if (!/^[A-Z]/.test(newRetailer.retailerName.trim())) {
-      errors.retailerName = 'Retailer Name must start with a capital letter';
+    } else if (!/^[A-Z][a-zA-Z\s]*$/.test(newRetailer.retailerName.trim())) {
+      errors.retailerName = 'Retailer Name must start with a capital letter and contain only letters';
     }
     if (!newRetailer.contactNumber.trim()) {
       errors.contactNumber = 'Contact Number is required';
@@ -174,11 +182,13 @@ const SalesAndInventoryDashboard: React.FC = () => {
     }
     if (!newRetailer.emailAddress.trim()) {
       errors.emailAddress = 'Email Address is required';
+    } else if (!/^([a-z0-9]+)@(gmail|outlook)\.com$/.test(newRetailer.emailAddress.trim())) {
+      errors.emailAddress = 'Email must be all lowercase and end with @gmail.com or @outlook.com';
     }
     if (!newRetailer.zone.trim()) {
       errors.zone = 'Zone is required';
-    } else if (!/^[A-Z]/.test(newRetailer.zone.trim())) {
-      errors.zone = 'Zone must start with a capital letter';
+    } else if (!/^[A-Z][a-zA-Z\s]*$/.test(newRetailer.zone.trim())) {
+      errors.zone = 'Zone must start with a capital letter and contain only letters';
     }
     if (!newRetailer.dateRegistered.trim()) {
       errors.dateRegistered = 'Date Registered is required';
@@ -201,82 +211,66 @@ const SalesAndInventoryDashboard: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'none',
+        background: theme.palette.background.default,
+        color: theme.palette.text.primary,
         p: 0,
         m: 0,
-        overflowX: 'hidden', // Prevent horizontal scroll
+        overflowX: 'hidden',
+        transition: 'background 0.3s, color 0.3s',
       }}
     >
-      {/* HEADER */}
-      <AppBar
-        position="static"
-        elevation={0}
+      {/* HEADER (no toggle) */}
+      <Box
         sx={{
-          background: '#1565c0',
-          width: '100%',
-          left: 0,
-          boxShadow: 'none',
-          p: 0,
-          m: 0,
+          borderRadius: 3,
+          p: { xs: 2, md: 3 },
+          mb: 3,
+          background: 'linear-gradient(90deg, #e3fcec 0%, #b2f7ef 100%)', // light teal gradient
+          color: '#00695c', // dark teal for text
+          textAlign: 'center',
+          boxShadow: 4,
+          position: 'relative',
+          minHeight: { xs: 80, md: 100 },
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        <Toolbar
-          sx={{
-            justifyContent: 'center',
-            minHeight: 'unset',
-            px: { xs: 1, md: 3 },
-            py: { xs: '12px', md: '22px' },
-            width: '100%',
-          }}
-        >
-          <Typography
-            variant="h3"
-            component="div"
-            sx={{
-              color: '#fff',
-              fontWeight: 'bold',
-              textAlign: 'center',
-              width: '100%',
-              letterSpacing: 1,
-              fontSize: { xs: '2rem', sm: '2.4rem', md: '2.8rem', lg: '3rem' },
-              px: { xs: '12px', md: '26px' },
-              py: 0,
-              m: 0,
-            }}
-          >
-            SalesSync Dashboard
-          </Typography>
-        </Toolbar>
-      </AppBar>
+        <Typography variant="h4" fontWeight="bold" letterSpacing={2} sx={{ fontSize: { xs: 22, md: 32 } }}>
+          SalesSync Dashboard
+        </Typography>
+      </Box>
 
       <Container maxWidth="xl" sx={{ py: { xs: 3, md: 6 } }}>
         {/* SUMMARY CARDS */}
         {activeTab === 0 && (
-          <Grid container spacing={4} justifyContent="center" alignItems="stretch" sx={{ mb: 5 }}>
+          <Grid container spacing={4} justifyContent="center" alignItems="stretch" sx={{ mb: 6 }}>
             {[
               { label: 'Total Sales', value: totalSales, bg: statCardColors[0] },
               { label: 'Total Amount', value: totalAmount.toLocaleString(undefined, { maximumFractionDigits: 2 }), bg: statCardColors[1] },
               { label: 'Avg/Sale', value: avgSaleAmount.toLocaleString(undefined, { maximumFractionDigits: 2 }), bg: statCardColors[2] },
             ].map(({ label, value, bg }) => (
-              <Grid key={label} item xs={12} sm={4}>
+              <Grid key={label} item xs={12} sm={6} md={4}>
                 <Box
                   sx={{
-                    p: 3,
+                    p: 4,
                     borderRadius: 3,
                     background: bg,
                     color: '#fff',
-                    boxShadow: 4,
+                    boxShadow: 6,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     minHeight: 120,
                     justifyContent: 'center',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.02)', boxShadow: 10 },
                   }}
                 >
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', mb: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', mb: 1, fontSize: 18 }}>
                     {label}
                   </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: 1 }}>
+                  <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: 1, fontSize: 36 }}>
                     {value}
                   </Typography>
                 </Box>
@@ -302,12 +296,15 @@ const SalesAndInventoryDashboard: React.FC = () => {
               fontWeight: 700,
               fontSize: 18,
               py: 2,
-              minWidth: 140,
+              minWidth: 160,
               color: theme.palette.text.primary,
-              '&:hover': { color: theme.palette.primary.main },
+              '&:hover': { color: theme.palette.primary.main, background: '#f0f4f8' },
+              borderRadius: 2,
+              mx: 1,
             },
             '& .Mui-selected': {
               color: theme.palette.primary.main,
+              background: '#e3f2fd',
             },
           }}
         >
@@ -325,7 +322,10 @@ const SalesAndInventoryDashboard: React.FC = () => {
                 width: '100%',
                 maxWidth: 1200,
                 mx: 'auto',
-                background: 'none',
+                background: theme.palette.background.paper,
+                borderRadius: 3,
+                boxShadow: 2,
+                p: { xs: 2, md: 4 },
               }}
               component="form"
               noValidate
@@ -334,7 +334,7 @@ const SalesAndInventoryDashboard: React.FC = () => {
               <Typography variant="h6" fontWeight="bold" color="primary" mb={2}>
                 Add New Sale
               </Typography>
-              <Grid container spacing={3}>
+              <Grid container spacing={3} alignItems="center">
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     label="Date"
@@ -426,39 +426,48 @@ const SalesAndInventoryDashboard: React.FC = () => {
               </Grid>
             </Box>
             {/* SALES TABLE */}
-            <TableContainer sx={{ mb: 5, maxWidth: 1200, mx: 'auto', borderRadius: 3, boxShadow: 2 }}>
-              <Table size="small">
+            <TableContainer sx={{ mb: 5, maxWidth: 1200, mx: 'auto', borderRadius: 3, boxShadow: 3, background: theme.palette.background.paper }}>
+              <Table size="small" sx={{ minWidth: 700 }}>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#1976d2' }}>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Date</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Retailer Name</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Product Name</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Quantity</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Amount</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Payment Status</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>Actions</TableCell>
+                  <TableRow sx={{ bgcolor: theme.palette.primary.main }}>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Date</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Retailer Name</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Product Name</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Quantity</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Amount</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Payment Status</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {sales.map((sale) => (
-                    <TableRow key={sale.id}>
-                      <TableCell>{sale.date}</TableCell>
-                      <TableCell>{sale.retailerName}</TableCell>
-                      <TableCell>{sale.productName}</TableCell>
-                      <TableCell>{sale.quantitySold}</TableCell>
-                      <TableCell>{sale.totalAmount}</TableCell>
-                      <TableCell>{sale.paymentStatus}</TableCell>
-                      <TableCell align="center">
-                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                  {sales.map((sale, idx) => (
+                    <TableRow key={sale.id} sx={{
+                      backgroundColor: theme.palette.mode === 'dark'
+                        ? (idx % 2 === 0 ? theme.palette.action.hover : theme.palette.background.paper)
+                        : (idx % 2 === 0 ? '#f9f9f9' : theme.palette.background.paper),
+                      '&:hover': { backgroundColor: theme.palette.action.selected },
+                    }}>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary }}>{sale.date}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary }}>{sale.retailerName}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary }}>{sale.productName}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary }}>{sale.quantitySold}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary }}>{sale.totalAmount}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary, textTransform: 'capitalize' }}>{sale.paymentStatus}</TableCell>
+                      <TableCell align="center" sx={{ py: 1.5 }}>
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', alignItems: 'center' }}>
                           <Tooltip title="Edit">
-                            <IconButton color="primary" onClick={() => {/* Add your edit handler here */}}>
-                              <EditIcon />
-                            </IconButton>
+                            <span>
+                              <IconButton color="primary" onClick={() => {/* Add your edit handler here */}} size="small">
+                                <EditIcon />
+                              </IconButton>
+                            </span>
                           </Tooltip>
                           <Tooltip title="Delete">
-                            <IconButton color="error" onClick={() => deleteSale(sale.id)}>
-                              <DeleteIcon />
-                            </IconButton>
+                            <span>
+                              <IconButton color="error" onClick={() => deleteSale(sale.id)} size="small">
+                                <DeleteIcon />
+                              </IconButton>
+                            </span>
                           </Tooltip>
                         </Box>
                       </TableCell>
@@ -470,7 +479,7 @@ const SalesAndInventoryDashboard: React.FC = () => {
             {/* SALES VISUALIZATIONS */}
             <Grid container spacing={4} sx={{ mb: 5 }}>
               <Grid item xs={12} md={6}>
-                <Paper sx={{ p: 2, height: 350 }}>
+                <Paper sx={{ p: 3, height: 370, borderRadius: 3, boxShadow: 2, background: theme.palette.background.paper }}>
                   <Typography variant="subtitle1" fontWeight="bold" mb={2}>Sales Over Time</Typography>
                   <ResponsiveContainer width="100%" height="85%">
                     <LineChart data={salesOverTimeData}>
@@ -484,7 +493,7 @@ const SalesAndInventoryDashboard: React.FC = () => {
                 </Paper>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Paper sx={{ p: 2, height: 350 }}>
+                <Paper sx={{ p: 3, height: 370, borderRadius: 3, boxShadow: 2, background: theme.palette.background.paper }}>
                   <Typography variant="subtitle1" fontWeight="bold" mb={2}>Sales by Product</Typography>
                   <ResponsiveContainer width="100%" height="85%">
                     <BarChart data={salesByProductData}>
@@ -498,7 +507,7 @@ const SalesAndInventoryDashboard: React.FC = () => {
                 </Paper>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Paper sx={{ p: 2, height: 350 }}>
+                <Paper sx={{ p: 3, height: 370, borderRadius: 3, boxShadow: 2, background: theme.palette.background.paper }}>
                   <Typography variant="subtitle1" fontWeight="bold" mb={2}>Payment Status</Typography>
                   <ResponsiveContainer width="100%" height="85%">
                     <PieChart>
@@ -536,7 +545,10 @@ const SalesAndInventoryDashboard: React.FC = () => {
                 width: '100%',
                 maxWidth: 1200,
                 mx: 'auto',
-                background: 'none',
+                background: theme.palette.background.paper,
+                borderRadius: 3,
+                boxShadow: 2,
+                p: { xs: 2, md: 4 },
               }}
               component="form"
               noValidate
@@ -545,7 +557,7 @@ const SalesAndInventoryDashboard: React.FC = () => {
               <Typography variant="h6" fontWeight="bold" color="primary" mb={2}>
                 Add New Retailer
               </Typography>
-              <Grid container spacing={3}>
+              <Grid container spacing={3} alignItems="center">
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     label="Retailer Name"
@@ -617,37 +629,51 @@ const SalesAndInventoryDashboard: React.FC = () => {
               </Grid>
             </Box>
             {/* RETAILER TABLE */}
-            <TableContainer sx={{ mb: 5, maxWidth: 1200, mx: 'auto', borderRadius: 3, boxShadow: 2 }}>
-              <Table size="small">
+            <TableContainer sx={{ mb: 5, maxWidth: 1200, mx: 'auto', borderRadius: 3, boxShadow: 3, background: theme.palette.background.paper }}>
+              <Table size="small" sx={{ minWidth: 700 }}>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#1976d2' }}>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Retailer Name</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Contact Number</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Email</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Zone</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Date Registered</TableCell>
-                    <TableCell sx={{ color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>Actions</TableCell>
+                  <TableRow sx={{ bgcolor: theme.palette.primary.main }}>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Retailer Name</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Contact Number</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Email</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Zone</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Date Registered</TableCell>
+                    <TableCell sx={{ color: theme.palette.primary.contrastText, fontWeight: 'bold', textAlign: 'center', fontSize: 16, py: 2 }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {retailers.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>{r.retailerName}</TableCell>
-                      <TableCell>{r.contactNumber}</TableCell>
-                      <TableCell>{r.emailAddress}</TableCell>
-                      <TableCell>{r.zone}</TableCell>
-                      <TableCell>{r.dateRegistered}</TableCell>
-                      <TableCell align="center">
-                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                  {retailers.map((r, idx) => (
+                    <TableRow key={r.id} sx={{
+                      backgroundColor:
+                        theme.palette.mode === 'dark'
+                          ? idx % 2 === 0
+                            ? theme.palette.action.hover
+                            : theme.palette.background.paper
+                          : idx % 2 === 0
+                            ? '#f9f9f9'
+                            : theme.palette.background.paper,
+                      '&:hover': { backgroundColor: theme.palette.action.selected },
+                    }}>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary }}>{r.retailerName}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary }}>{r.contactNumber}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary }}>{r.emailAddress}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary }}>{r.zone}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 15, py: 1.5, color: theme.palette.text.primary }}>{r.dateRegistered}</TableCell>
+                      <TableCell align="center" sx={{ py: 1.5 }}>
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', alignItems: 'center' }}>
                           <Tooltip title="Edit">
-                            <IconButton color="primary" onClick={() => {/* Add your edit handler here */}}>
-                              <EditIcon />
-                            </IconButton>
+                            <span>
+                              <IconButton color="primary" onClick={() => {/* Add your edit handler here */}} size="small">
+                                <EditIcon />
+                              </IconButton>
+                            </span>
                           </Tooltip>
                           <Tooltip title="Delete">
-                            <IconButton color="error" onClick={() => deleteRetailer(r.id)}>
-                              <DeleteIcon />
-                            </IconButton>
+                            <span>
+                              <IconButton color="error" onClick={() => deleteRetailer(r.id)} size="small">
+                                <DeleteIcon />
+                              </IconButton>
+                            </span>
                           </Tooltip>
                         </Box>
                       </TableCell>
@@ -659,7 +685,7 @@ const SalesAndInventoryDashboard: React.FC = () => {
             {/* RETAILER VISUALIZATION */}
             <Grid container spacing={4}>
               <Grid item xs={12} md={6}>
-                <Paper sx={{ p: 2, height: 350 }}>
+                <Paper sx={{ p: 3, height: 370, borderRadius: 3, boxShadow: 2, background: theme.palette.background.paper }}>
                   <Typography variant="subtitle1" fontWeight="bold" mb={2}>Retailers by Zone</Typography>
                   <ResponsiveContainer width="100%" height="85%">
                     <PieChart>

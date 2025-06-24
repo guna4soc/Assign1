@@ -2,8 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   Box, Typography, Paper, TextField, Button, IconButton, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, Dialog, DialogTitle,
-  DialogContent, DialogActions, MenuItem, Grid, Card, CardContent, CardHeader, Switch, FormControlLabel, Rating, Chip, Tooltip
+  TableCell, TableContainer, TableHead, TableRow, MenuItem, Grid, Card, CardContent, Switch, FormControlLabel, Rating, Chip, Tooltip, Stack
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -35,7 +34,6 @@ const farmTypes = ['Dairy', 'Poultry', 'Crop', 'Mixed'];
 const seasons = ['Spring', 'Summer', 'Autumn', 'Winter'];
 
 const FarmerManagementDashboard: React.FC = () => {
-  // Farmer state and form
   const [farmers, setFarmers] = useState<Farmer[]>([
     { id: 'FARM001', name: 'Anita', farmName: 'Green Pastures', location: 'Springfield', size: '12', farmType: 'Dairy', isOrganic: true, satisfaction: 4, produceSeason: 'Spring', farmColor: '#a5d6a7' },
     { id: 'FARM002', name: 'Bhavesh', farmName: 'Sunny Acres', location: 'Riverside', size: '8.5', farmType: 'Crop', isOrganic: false, satisfaction: 3, produceSeason: 'Summer', farmColor: '#ffe082' },
@@ -216,7 +214,6 @@ const FarmerManagementDashboard: React.FC = () => {
     });
     return counts;
   }, [farmers]);
-
   const locationCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     farmers.forEach((f) => {
@@ -352,74 +349,129 @@ const FarmerManagementDashboard: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 2, maxWidth: 1100, margin: 'auto', background: '#f8fafc', borderRadius: 2 }}>
+    <Box
+      sx={{
+        p: { xs: 1, sm: 3 },
+        maxWidth: '100vw',
+        width: '100%',
+        minWidth: 0,
+        overflowX: 'hidden',
+        margin: 'auto',
+        bgcolor: (theme) => theme.palette.mode === 'dark' ? '#181a20' : '#f8fafc',
+        borderRadius: 3,
+        boxShadow: 4,
+        minHeight: '100vh',
+        transition: 'background 0.3s',
+      }}
+    >
       {/* HEADER */}
       <Box
         sx={{
-          borderRadius: 2,
-          p: 2,
-          mb: 2,
-          background: 'linear-gradient(90deg, #00b894 0%, #0984e3 100%)',
-          color: '#fff',
+          borderRadius: 3,
+          p: { xs: 2, sm: 3 },
+          mb: 3,
+          background: (theme) => theme.palette.mode === 'dark' ? '#232946' : 'linear-gradient(90deg, #b2f7ef 0%, #e0f7fa 100%)',
+          color: (theme) => theme.palette.mode === 'dark' ? '#fff' : '#00897b',
           textAlign: 'center',
-          boxShadow: 2,
+          boxShadow: 3,
+          transition: 'background 0.3s',
         }}
       >
-        <Typography variant="h4" fontWeight="bold">
+        <Typography variant="h5" fontWeight="bold" letterSpacing={1} sx={{ textShadow: '0 2px 8px rgba(0,0,0,0.08)', fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.7rem' } }}>
           Farmer Management Dashboard
         </Typography>
       </Box>
 
       {/* SUMMARY CARDS */}
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <Card sx={{ height: 80, background: '#ffe082', color: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 2 }}>
+          <Card sx={{
+            height: 120,
+            background: (theme) => theme.palette.mode === 'dark' ? '#2d3250' : '#ffe082',
+            color: (theme) => theme.palette.mode === 'dark' ? '#fff' : '#333',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: 4,
+            borderRadius: 3,
+            border: (theme) => theme.palette.mode === 'dark' ? '1px solid #3f51b5' : 'none',
+            transition: 'background 0.3s',
+          }}>
             <CardContent sx={{ p: 1, textAlign: 'center' }}>
-              <Typography fontWeight="bold" fontSize="1.1rem">Total Farmers</Typography>
-              <Typography variant="h5" fontWeight="bold">{totalFarmers}</Typography>
+              <Typography fontWeight="bold" fontSize="1.15rem">Total Farmers</Typography>
+              <Typography variant="h4" fontWeight="bold">{totalFarmers}</Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={4}>
-          <Card sx={{ height: 80, background: '#b2bec3', color: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 2 }}>
+          <Card sx={{
+            height: 120,
+            background: (theme) => theme.palette.mode === 'dark' ? '#232946' : '#b2bec3',
+            color: (theme) => theme.palette.mode === 'dark' ? '#fff' : '#222',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: 4,
+            borderRadius: 3,
+            border: (theme) => theme.palette.mode === 'dark' ? '1px solid #00b894' : 'none',
+            transition: 'background 0.3s',
+          }}>
             <CardContent sx={{ p: 1, textAlign: 'center' }}>
-              <Typography fontWeight="bold" fontSize="1.1rem">Avg. Farm Size</Typography>
-              <Typography variant="h5" fontWeight="bold">{averageFarmSize}</Typography>
+              <Typography fontWeight="bold" fontSize="1.15rem">Avg. Farm Size</Typography>
+              <Typography variant="h4" fontWeight="bold">{averageFarmSize}</Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={4}>
-          <Card sx={{ height: 80, background: '#00b894', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 2 }}>
+          <Card sx={{
+            height: 120,
+            background: (theme) => theme.palette.mode === 'dark' ? '#00b894' : '#00b894',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: 4,
+            borderRadius: 3,
+            border: (theme) => theme.palette.mode === 'dark' ? '1px solid #fff' : 'none',
+            transition: 'background 0.3s',
+          }}>
             <CardContent sx={{ p: 1, textAlign: 'center' }}>
-              <Typography fontWeight="bold" fontSize="1.1rem">Top Location</Typography>
-              <Typography variant="h5" fontWeight="bold">{locationWithMostFarmers}</Typography>
+              <Typography fontWeight="bold" fontSize="1.15rem">Top Location</Typography>
+              <Typography variant="h4" fontWeight="bold">{locationWithMostFarmers}</Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
       {/* FARMER FORM */}
-      <Paper sx={{ p: 2, mb: 2, boxShadow: 3 }}>
-        <Typography variant="h6" fontWeight="bold" mb={1}>Farmers Database</Typography>
+      <Paper sx={{
+        p: { xs: 2, sm: 3 },
+        mb: 3,
+        boxShadow: 4,
+        borderRadius: 3,
+        bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232946' : '#fff',
+        transition: 'background 0.3s',
+      }}>
+        <Typography variant="h5" fontWeight="bold" mb={2} color="primary.main">Farmers Database</Typography>
         <form onSubmit={handleAddFarmer} noValidate>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField fullWidth label="Farmer ID" name="id" value={farmerForm.id} onChange={handleFarmerChange} required error={!!farmerIdError} helperText={farmerIdError} inputProps={{ maxLength: 7 }} />
+              <TextField fullWidth label="Farmer ID" name="id" value={farmerForm.id} onChange={handleFarmerChange} required error={!!farmerIdError} helperText={farmerIdError} inputProps={{ maxLength: 7 }} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#181a20' : '#f4f6fa', borderRadius: 2 }} />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField fullWidth label="Farmer Name" name="name" value={farmerForm.name} onChange={handleFarmerChange} required error={!!farmerNameError} helperText={farmerNameError} />
+              <TextField fullWidth label="Farmer Name" name="name" value={farmerForm.name} onChange={handleFarmerChange} required error={!!farmerNameError} helperText={farmerNameError} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#181a20' : '#f4f6fa', borderRadius: 2 }} />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField fullWidth label="Farm Name" name="farmName" value={farmerForm.farmName} onChange={handleFarmerChange} required error={!!farmNameError} helperText={farmNameError} inputProps={{ maxLength: 15 }} />
+              <TextField fullWidth label="Farm Name" name="farmName" value={farmerForm.farmName} onChange={handleFarmerChange} required error={!!farmNameError} helperText={farmNameError} inputProps={{ maxLength: 15 }} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#181a20' : '#f4f6fa', borderRadius: 2 }} />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField fullWidth label="Location" name="location" value={farmerForm.location} onChange={handleFarmerChange} required error={!!locationError} helperText={locationError} />
+              <TextField fullWidth label="Location" name="location" value={farmerForm.location} onChange={handleFarmerChange} required error={!!locationError} helperText={locationError} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#181a20' : '#f4f6fa', borderRadius: 2 }} />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField fullWidth label="Farm Size (acres)" name="size" value={farmerForm.size} onChange={handleFarmerChange} required error={!!sizeError} helperText={sizeError} />
+              <TextField fullWidth label="Farm Size (acres)" name="size" value={farmerForm.size} onChange={handleFarmerChange} required error={!!sizeError} helperText={sizeError} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#181a20' : '#f4f6fa', borderRadius: 2 }} />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField select fullWidth label="Farm Type" name="farmType" value={farmerForm.farmType} onChange={handleFarmerChange} required error={!!farmTypeError} helperText={farmTypeError}>
+              <TextField select fullWidth label="Farm Type" name="farmType" value={farmerForm.farmType} onChange={handleFarmerChange} required error={!!farmTypeError} helperText={farmTypeError} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#181a20' : '#f4f6fa', borderRadius: 2 }}>
                 <MenuItem value="">Select farm type</MenuItem>
                 {farmTypes.map((ft) => <MenuItem key={ft} value={ft}>{ft}</MenuItem>)}
               </TextField>
@@ -435,254 +487,162 @@ const FarmerManagementDashboard: React.FC = () => {
                     color="success"
                   />
                 }
-                label="Certified Organic?"
+                label="Organic"
+                sx={{ ml: 1 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <Tooltip title="Farmer Satisfaction (1-5)">
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography>Satisfaction:</Typography>
-                  <Rating
-                    name="satisfaction"
-                    value={farmerForm.satisfaction}
-                    onChange={handleSatisfactionChange}
-                  />
-                </Box>
-              </Tooltip>
+            <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
+              <Rating
+                name="satisfaction"
+                value={farmerForm.satisfaction}
+                onChange={handleSatisfactionChange}
+                max={5}
+                sx={{ verticalAlign: 'middle', mr: 1 }}
+              />
+              <Typography component="span">Satisfaction</Typography>
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                select
-                fullWidth
-                label="Produce Season"
-                name="produceSeason"
-                value={farmerForm.produceSeason}
-                onChange={handleFarmerChange}
-                required
-                error={!!produceSeasonError}
-                helperText={produceSeasonError}
-              >
+              <TextField select fullWidth label="Produce Season" name="produceSeason" value={farmerForm.produceSeason} onChange={handleFarmerChange} required error={!!produceSeasonError} helperText={produceSeasonError} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#181a20' : '#f4f6fa', borderRadius: 2 }}>
                 <MenuItem value="">Select season</MenuItem>
                 {seasons.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="Farm Color (hex)"
-                name="farmColor"
-                value={farmerForm.farmColor}
-                onChange={handleFarmerChange}
-                required
-                error={!!farmColorError}
-                helperText={farmColorError || 'e.g., #aabbcc'}
-                inputProps={{ maxLength: 7 }}
-                type="color"
-                sx={{ width: 80, height: 40, p: 0 }}
-              />
-              <Chip label={farmerForm.farmColor} sx={{ ml: 2, background: farmerForm.farmColor, color: '#fff' }} />
+              <TextField fullWidth label="Farm Color" name="farmColor" value={farmerForm.farmColor} onChange={handleFarmerChange} required error={!!farmColorError} helperText={farmColorError} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#181a20' : '#f4f6fa', borderRadius: 2 }} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Box sx={{ width: 34, height: 34, borderRadius: '50%', background: farmerForm.farmColor, border: '2px solid #bbb', ml: 1, boxShadow: 1 }} />
+            </Grid>
+            <Grid item xs={12} md={12} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' }, mt: 2 }}>
+              {editFarmerIdx === null ? (
+                <Button type="submit" variant="contained" color="primary" disabled={!canSubmitFarmer()} sx={{ px: 4, py: 1.2, fontWeight: 'bold', borderRadius: 2, boxShadow: 2 }}>
+                  Add Farmer
+                </Button>
+              ) : (
+                <Stack direction="row" spacing={2}>
+                  <Button variant="contained" color="primary" onClick={handleSaveEditFarmer} disabled={!canSubmitFarmer()} sx={{ px: 4, py: 1.2, fontWeight: 'bold', borderRadius: 2, boxShadow: 2 }}>
+                    Save
+                  </Button>
+                  <Button variant="outlined" color="secondary" onClick={handleCloseDialog} sx={{ px: 4, py: 1.2, fontWeight: 'bold', borderRadius: 2 }}>
+                    Cancel
+                  </Button>
+                </Stack>
+              )}
             </Grid>
           </Grid>
-          <Button type="submit" variant="contained" color="success" disabled={!canSubmitFarmer()} sx={{ mt: 2 }}>
-            Add Farmer
-          </Button>
         </form>
       </Paper>
 
-      {/* TABLE */}
       {/* FARMERS TABLE */}
-<TableContainer component={Paper} sx={{ mt: 3, mb: 4, boxShadow: 3 }}>
-  <Table>
-    <TableHead sx={{ background: '#e3f2fd' }}>
-      <TableRow>
-        <TableCell>Farmer ID</TableCell>
-        <TableCell>Name</TableCell>
-        <TableCell>Farm Name</TableCell>
-        <TableCell>Location</TableCell>
-        <TableCell>Size (acres)</TableCell>
-        <TableCell>Farm Type</TableCell>
-        <TableCell>Organic</TableCell>
-        <TableCell>Satisfaction</TableCell>
-        <TableCell>Produce Season</TableCell>
-        <TableCell>Farm Color</TableCell>
-        <TableCell align="center">Actions</TableCell>
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      {farmers.map((farmer, idx) => (
-        <TableRow key={farmer.id}>
-          <TableCell>{farmer.id}</TableCell>
-          <TableCell>{farmer.name}</TableCell>
-          <TableCell>{farmer.farmName}</TableCell>
-          <TableCell>{farmer.location}</TableCell>
-          <TableCell>{farmer.size}</TableCell>
-          <TableCell>{farmer.farmType}</TableCell>
-          <TableCell>
-            {farmer.isOrganic ? (
-              <Chip label="Yes" color="success" size="small" />
-            ) : (
-              <Chip label="No" color="default" size="small" />
-            )}
-          </TableCell>
-          <TableCell>
-            <Rating value={farmer.satisfaction} readOnly size="small" />
-          </TableCell>
-          <TableCell>{farmer.produceSeason}</TableCell>
-          <TableCell>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{
-                width: 20, height: 20, borderRadius: '50%',
-                background: farmer.farmColor, border: '1px solid #ccc', mr: 1
-              }} />
-              <Typography variant="caption">{farmer.farmColor}</Typography>
-            </Box>
-          </TableCell>
-          <TableCell align="center">
-            {/* Actions: Edit and Delete horizontally */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-              <Tooltip title="Edit">
-                <IconButton
-                  color="primary"
-                  onClick={() => handleEditFarmer(idx)}
-                  size="small"
-                  aria-label="edit"
-                >
-                  <EditIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Delete">
-                <IconButton
-                  color="error"
-                  onClick={() => handleDeleteFarmer(idx)}
-                  size="small"
-                  aria-label="delete"
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </TableCell>
-        </TableRow>
-      ))}
-    </TableBody>
-  </Table>
-</TableContainer>
-
+      <Paper sx={{
+        p: { xs: 2, sm: 3 },
+        mb: 3,
+        boxShadow: 4,
+        borderRadius: 3,
+        bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232946' : '#fff',
+        transition: 'background 0.3s',
+      }}>
+        <Typography variant="h5" fontWeight="bold" mb={2} color="primary.main">All Farmers</Typography>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold', textAlign: 'center' }}>ID</TableCell>
+                <TableCell sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold', textAlign: 'center' }}>Name</TableCell>
+                <TableCell sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold', textAlign: 'center' }}>Farm Name</TableCell>
+                <TableCell sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold', textAlign: 'center' }}>Location</TableCell>
+                <TableCell sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold', textAlign: 'center' }}>Size</TableCell>
+                <TableCell sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold', textAlign: 'center' }}>Type</TableCell>
+                <TableCell sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold', textAlign: 'center' }}>Organic</TableCell>
+                <TableCell sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold', textAlign: 'center' }}>Satisfaction</TableCell>
+                <TableCell sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold', textAlign: 'center' }}>Season</TableCell>
+                <TableCell sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold', textAlign: 'center' }}>Color</TableCell>
+                <TableCell align="center" sx={{ bgcolor: '#e3f2fd', color: '#01579b', fontWeight: 'bold' }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {farmers.map((f, idx) => (
+                <TableRow key={f.id} hover sx={{ transition: 'background 0.2s', '&:hover': { background: (theme) => theme.palette.mode === 'dark' ? '#232946' : '#f1f8e9' } }}>
+                  <TableCell align="center">{f.id}</TableCell>
+                  <TableCell align="center">{f.name}</TableCell>
+                  <TableCell align="center">{f.farmName}</TableCell>
+                  <TableCell align="center">{f.location}</TableCell>
+                  <TableCell align="center">{f.size}</TableCell>
+                  <TableCell align="center">{f.farmType}</TableCell>
+                  <TableCell align="center">
+                    {f.isOrganic ? <Chip label="Yes" color="success" size="small" /> : <Chip label="No" color="default" size="small" />}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Rating value={f.satisfaction} readOnly max={5} size="small" />
+                  </TableCell>
+                  <TableCell align="center">{f.produceSeason}</TableCell>
+                  <TableCell align="center">
+                    <Box sx={{ width: 24, height: 24, borderRadius: '50%', background: f.farmColor, border: '1px solid #ddd', mx: 'auto', boxShadow: 1 }} />
+                  </TableCell>
+                  <TableCell align="center">
+                    <Stack direction="row" spacing={1} justifyContent="center">
+                      <Tooltip title="Edit">
+                        <IconButton size="small" onClick={() => handleEditFarmer(idx)} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232946' : '#e3f2fd', '&:hover': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#3f51b5' : '#bbdefb' } }}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton size="small" color="error" onClick={() => handleDeleteFarmer(idx)} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232946' : '#ffebee', '&:hover': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#d63031' : '#ffcdd2' } }}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
 
       {/* CHARTS */}
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, boxShadow: 2, background: '#fff' }}>
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              Farm Types Distribution
-            </Typography>
-            <Box sx={{ height: 230 }}>
-              <Pie
-                data={pieData}
-                options={{
-                  ...baseChartOptions,
-                  plugins: { ...baseChartOptions.plugins, title: { ...baseChartOptions.plugins.title, text: 'Farm Types' } },
-                }}
-              />
-            </Box>
-          </Paper>
+          <Card sx={{ height: 370, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: 4, borderRadius: 3, bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232946' : '#fff', transition: 'background 0.3s' }}>
+            <CardContent sx={{ width: '100%', height: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography fontWeight="bold" mb={1} color="primary.main">Distribution by Farm Type</Typography>
+              <Box sx={{ width: '100%', height: 250 }}>
+                <Pie data={pieData} options={{ ...baseChartOptions, plugins: { ...baseChartOptions.plugins, title: { ...baseChartOptions.plugins.title, text: 'Farm Types' } } }} />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, boxShadow: 2, background: '#fff' }}>
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              Farmers by Location
-            </Typography>
-            <Box sx={{ height: 230 }}>
-              <Bar
-                data={barDataLocationCounts}
-                options={{
-                  ...baseChartOptions,
-                  plugins: { ...baseChartOptions.plugins, title: { ...baseChartOptions.plugins.title, text: 'Farmers by Location' } },
-                }}
-              />
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, boxShadow: 2, background: '#fff' }}>
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              Avg. Farm Size by Location
-            </Typography>
-            <Box sx={{ height: 230 }}>
-              <Bar
-                data={barDataAvgSize}
-                options={{
-                  ...baseChartOptions,
-                  plugins: { ...baseChartOptions.plugins, title: { ...baseChartOptions.plugins.title, text: 'Avg. Farm Size by Location' } },
-                }}
-              />
-            </Box>
-          </Paper>
+          <Card sx={{ height: 370, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: 4, borderRadius: 3, bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232946' : '#fff', transition: 'background 0.3s' }}>
+            <CardContent sx={{ width: '100%', height: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography fontWeight="bold" mb={1} color="primary.main">Farmers by Location</Typography>
+              <Box sx={{ width: '100%', height: 250 }}>
+                <Bar data={barDataLocationCounts} options={{ ...baseChartOptions, plugins: { ...baseChartOptions.plugins, title: { ...baseChartOptions.plugins.title, text: 'Farmers by Location' } } }} />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, boxShadow: 2, background: '#fff' }}>
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              Farm Size Frequency
-            </Typography>
-            <Box sx={{ height: 230 }}>
-              <Scatter
-                data={scatterData}
-                options={{
-                  ...baseChartOptions,
-                  plugins: { ...baseChartOptions.plugins, title: { ...baseChartOptions.plugins.title, text: 'Farm Size Frequency' } },
-                }}
-              />
-            </Box>
-          </Paper>
+          <Card sx={{ height: 370, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: 4, borderRadius: 3, bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232946' : '#fff', transition: 'background 0.3s' }}>
+            <CardContent sx={{ width: '100%', height: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography fontWeight="bold" mb={1} color="primary.main">Average Farm Size by Location</Typography>
+              <Box sx={{ width: '100%', height: 250 }}>
+                <Bar data={barDataAvgSize} options={{ ...baseChartOptions, plugins: { ...baseChartOptions.plugins, title: { ...baseChartOptions.plugins.title, text: 'Average Farm Size by Location' } } }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: 370, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: 4, borderRadius: 3, bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232946' : '#fff', transition: 'background 0.3s' }}>
+            <CardContent sx={{ width: '100%', height: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography fontWeight="bold" mb={1} color="primary.main">Farm Size Frequency</Typography>
+              <Box sx={{ width: '100%', height: 250 }}>
+                <Scatter data={scatterData} options={{ ...baseChartOptions, plugins: { ...baseChartOptions.plugins, title: { ...baseChartOptions.plugins.title, text: 'Farm Size Frequency' } } }} />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
-
-      {/* Edit Dialog */}
-      <Dialog open={editFarmerIdx !== null} onClose={handleCloseDialog}>
-        <DialogTitle>Edit Farmer</DialogTitle>
-        <DialogContent>
-          <form noValidate>
-            <TextField fullWidth label="Farmer ID" name="id" value={farmerForm.id} onChange={handleFarmerChange} margin="normal" required error={!!farmerIdError} helperText={farmerIdError} inputProps={{ maxLength: 7 }} />
-            <TextField fullWidth label="Farmer Name" name="name" value={farmerForm.name} onChange={handleFarmerChange} margin="normal" required error={!!farmerNameError} helperText={farmerNameError} />
-            <TextField fullWidth label="Farm Name" name="farmName" value={farmerForm.farmName} onChange={handleFarmerChange} margin="normal" required error={!!farmNameError} helperText={farmNameError} inputProps={{ maxLength: 15 }} />
-            <TextField fullWidth label="Location" name="location" value={farmerForm.location} onChange={handleFarmerChange} margin="normal" required error={!!locationError} helperText={locationError} />
-            <TextField fullWidth label="Farm Size (acres)" name="size" value={farmerForm.size} onChange={handleFarmerChange} margin="normal" required error={!!sizeError} helperText={sizeError} />
-            <TextField select fullWidth label="Farm Type" name="farmType" value={farmerForm.farmType} onChange={handleFarmerChange} margin="normal" required error={!!farmTypeError} helperText={farmTypeError}>
-              <MenuItem value="">Select farm type</MenuItem>
-              {farmTypes.map((ft) => <MenuItem key={ft} value={ft}>{ft}</MenuItem>)}
-            </TextField>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={farmerForm.isOrganic}
-                  onChange={e => setFarmerForm(f => ({ ...f, isOrganic: e.target.checked }))}
-                  name="isOrganic"
-                  color="success"
-                />
-              }
-              label="Certified Organic?"
-            />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-              <Typography>Satisfaction:</Typography>
-              <Rating name="satisfaction" value={farmerForm.satisfaction} onChange={handleSatisfactionChange} />
-            </Box>
-            <TextField select fullWidth label="Produce Season" name="produceSeason" value={farmerForm.produceSeason} onChange={handleFarmerChange} margin="normal" required error={!!produceSeasonError} helperText={produceSeasonError}>
-              <MenuItem value="">Select season</MenuItem>
-              {seasons.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-            </TextField>
-            <TextField fullWidth label="Farm Color (hex)" name="farmColor" value={farmerForm.farmColor} onChange={handleFarmerChange} margin="normal" required error={!!farmColorError} helperText={farmColorError || 'e.g., #aabbcc'} inputProps={{ maxLength: 7 }} type="color" sx={{ width: 80, height: 40, p: 0 }} />
-            <Chip label={farmerForm.farmColor} sx={{ ml: 2, background: farmerForm.farmColor, color: '#fff' }} />
-          </form>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSaveEditFarmer} color="success" disabled={!canSubmitFarmer()}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

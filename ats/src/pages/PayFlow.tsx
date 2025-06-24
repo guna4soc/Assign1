@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -13,22 +13,15 @@ import {
   TableRow,
   Snackbar,
   Alert,
-  Divider,
   Grid,
   MenuItem,
   IconButton,
   Tooltip,
   Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  CircularProgress,
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import SecurityIcon from '@mui/icons-material/Security';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import CloseIcon from '@mui/icons-material/Close';
 
 interface Payment {
   id: number;
@@ -43,6 +36,7 @@ interface Payment {
 }
 
 const PAYMENT_METHODS = ['Credit Card', 'Bank Transfer', 'Mobile Payment', 'Cash'];
+const NEW_PAYMENT_STORAGE_KEY = 'farmer-portal-new-payment';
 
 const Payments: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([
@@ -97,9 +91,28 @@ const Payments: React.FC = () => {
     severity: 'success',
   });
 
-  const [invoiceOpen, setInvoiceOpen] = useState(false);
-  const [currentInvoiceUrl, setCurrentInvoiceUrl] = useState('');
-  const [loadingInvoice, setLoadingInvoice] = useState(false);
+  // --- Persist and restore new payment form ---
+  useEffect(() => {
+    const saved = localStorage.getItem(NEW_PAYMENT_STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setNewPayment({
+          amount: parsed.amount || '',
+          method: PAYMENT_METHODS.includes(parsed.method) ? parsed.method : PAYMENT_METHODS[0],
+          accountNumber: parsed.accountNumber || '',
+          farmerId: parsed.farmerId || '',
+        });
+      } catch {
+        // ignore
+      }
+    }
+    // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(NEW_PAYMENT_STORAGE_KEY, JSON.stringify(newPayment));
+  }, [newPayment]);
 
   // Validation functions
   const validateAmount = (value: string) => {
@@ -109,14 +122,12 @@ const Payments: React.FC = () => {
   };
 
   const validateAccountNumber = (value: string) => {
-    // For farmer portal, let's say account number must be digits only, length 8-12
-    if (!/^\d{8,12}$/.test(value)) return 'Account number must be 8-12 digits';
+    if (!/^\d{8,12}/.test(value)) return 'Account number must be 8-12 digits';
     return '';
   };
 
   const validateFarmerId = (value: string) => {
-    // Following previous format: 4 uppercase letters + 3 digits
-    if (!/^[A-Z]{4}\d{3}$/.test(value)) return 'Farmer ID must be 4 uppercase letters followed by 3 digits (e.g. FARM001)';
+    if (!/^[A-Z]{4}\d{3}/.test(value)) return 'Farmer ID must be 4 uppercase letters followed by 3 digits (e.g. FARM001)';
     return '';
   };
 
@@ -166,24 +177,8 @@ const Payments: React.FC = () => {
     setWalletBalance(prev => prev + newPay.amount);
     setNewPayment({ amount: '', method: PAYMENT_METHODS[0], accountNumber: '', farmerId: '' });
     setSnackbar({ open: true, message: 'Payment added successfully! Wallet balance updated.', severity: 'success' });
-  };
-
-  const openInvoiceDialog = (url?: string) => {
-    if (!url) {
-      setSnackbar({ open: true, message: 'Invoice not available', severity: 'error' });
-      return;
-    }
-    setLoadingInvoice(true);
-    setInvoiceOpen(true);
-    // Simulate loading delay
-    setTimeout(() => setLoadingInvoice(false), 1000);
-    setCurrentInvoiceUrl(url);
-  };
-
-  const closeInvoiceDialog = () => {
-    setInvoiceOpen(false);
-    setCurrentInvoiceUrl('');
-    setLoadingInvoice(false);
+    // Clear localStorage for new payment
+    localStorage.removeItem(NEW_PAYMENT_STORAGE_KEY);
   };
 
   const handleCloseSnackbar = () => {
@@ -197,8 +192,8 @@ const Payments: React.FC = () => {
           mb: 4,
           py: 3,
           borderRadius: 3,
-          background: 'linear-gradient(135deg, #4caf50 0%, #81c784 100%)',
-          color: 'white',
+          background: 'linear-gradient(90deg, #e8f5e9 0%, #b2f7cc 100%)', // light green gradient
+          color: '#1b5e20', // deep green for text
           textAlign: 'center',
           boxShadow: '0px 6px 20px rgba(100, 200, 123, 0.4)',
           userSelect: 'none',
@@ -246,8 +241,8 @@ const Payments: React.FC = () => {
             <Typography variant="h6" fontWeight="700" gutterBottom>
               Wallet Balance
             </Typography>
-            <Typography variant="h3" fontWeight="bold" color="primary" sx={{ mb: 1 }}>
-              ${walletBalance.toFixed(2)}
+            <Typography variant="h5" fontWeight="bold" color="primary" sx={{ mb: 1, fontSize: { xs: '1.2rem', md: '1.5rem' } }}>
+              ₹{walletBalance.toFixed(2)}
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
               Your available funds for transactions
@@ -322,7 +317,7 @@ const Payments: React.FC = () => {
                   <TableRow>
                     <TableCell><strong>Transaction ID</strong></TableCell>
                     <TableCell><strong>Date</strong></TableCell>
-                    <TableCell align="right"><strong>Amount ($)</strong></TableCell>
+                    <TableCell align="right"><strong>Amount (₹)</strong></TableCell>
                     <TableCell><strong>Method</strong></TableCell>
                     <TableCell><strong>Status</strong></TableCell>
                     <TableCell align="center"><strong>Invoice</strong></TableCell>
@@ -340,7 +335,7 @@ const Payments: React.FC = () => {
                       <TableRow key={id} hover>
                         <TableCell sx={{ fontFamily: 'monospace' }}>{transactionId}</TableCell>
                         <TableCell>{date}</TableCell>
-                        <TableCell align="right">{amount.toFixed(2)}</TableCell>
+                        <TableCell align="right">₹{amount.toFixed(2)}</TableCell>
                         <TableCell>{method}</TableCell>
                         <TableCell sx={{ color: status === 'Completed' ? 'green' : status === 'Pending' ? 'orange' : 'red' }}>
                           {status}
@@ -415,4 +410,3 @@ const Payments: React.FC = () => {
 };
 
 export default Payments;
-

@@ -1,0 +1,55 @@
+.semi-circle-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 40px;
+}
+
+.blobs-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.blob {
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.7;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.typing-animation {
+  color: white;
+  font-size: 1.5rem;
+  font-family: 'Courier New', Courier, monospace;
+  margin-top: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.typed-text {
+  border-right: 2px solid white;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 0;
+  animation: typing 2s steps(20, end) forwards;
+}
+
+.cursor {
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink 0.7s steps(1) infinite;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 12ch; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}

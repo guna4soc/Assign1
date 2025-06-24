@@ -5,24 +5,15 @@ import {
   Paper,
   TextField,
   Button,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Avatar,
-  Divider,
   MenuItem,
   Select,
   FormControl,
   InputLabel,
   Snackbar,
   Alert,
-  IconButton,
+  useTheme,
 } from '@mui/material';
-import FarmerIcon from '@mui/icons-material/Face';
-import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import SendIcon from '@mui/icons-material/Send';
-import CloseIcon from '@mui/icons-material/Close';
 
 interface MessageType {
   id: number;
@@ -35,15 +26,26 @@ interface MessageType {
   issueType?: string;
 }
 
-const PRIORITY_COLORS: Record<string, string> = {
-  Low: '#aed581', // green light
-  Medium: '#ffb74d', // amber
-  High: '#e57373', // red
+const PRIORITY_COLORS: Record<
+  string,
+  { light: string; dark: string }
+> = {
+  Low: { light: '#aed581', dark: '#33691e' },
+  Medium: { light: '#ffb74d', dark: '#fbc02d' },
+  High: { light: '#e57373', dark: '#d32f2f' },
 };
 
-const ISSUE_TYPES = ['Milk Testing Issue', 'Payment Query', 'Delivery Problem', 'Technical Support', 'Other'];
+const ISSUE_TYPES = [
+  'Milk Testing Issue',
+  'Payment Query',
+  'Delivery Problem',
+  'Technical Support',
+  'Other',
+];
 
 const FarmerMessage: React.FC = () => {
+  const theme = useTheme();
+
   const [messages, setMessages] = useState<MessageType[]>([
     {
       id: 1,
@@ -58,7 +60,11 @@ const FarmerMessage: React.FC = () => {
     description: '',
     priority: 'Medium',
   });
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'info' | 'success' | 'error' }>({
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'info' | 'success' | 'error';
+  }>({
     open: false,
     message: '',
     severity: 'info',
@@ -66,7 +72,6 @@ const FarmerMessage: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll chat to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -117,17 +122,32 @@ const FarmerMessage: React.FC = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Helper to get theme-aware background
+  const getBgColor = (light: string, dark: string) =>
+    theme.palette.mode === 'dark' ? dark : light;
+
   return (
-    <Box sx={{ maxWidth: 960, mx: 'auto', p: 2, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+    <Box
+      sx={{
+        maxWidth: 960,
+        mx: 'auto',
+        p: 2,
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      }}
+    >
       <Box
         sx={{
           mb: 4,
           py: 3,
           borderRadius: 3,
-          background: 'linear-gradient(135deg, #4caf50 0%, #81c784 100%)',
-          color: 'white',
+          background: theme.palette.mode === 'dark'
+            ? 'linear-gradient(135deg, #212121 0%, #424242 100%)'
+            : 'linear-gradient(90deg, #e8f5e9 0%, #b2f7cc 100%)', // light green gradient
+          color: theme.palette.mode === 'dark' ? '#fff' : '#1b5e20', // deep green for text
           textAlign: 'center',
-          boxShadow: '0px 6px 20px rgba(100, 200, 123, 0.4)',
+          boxShadow: theme.palette.mode === 'dark'
+            ? '0px 6px 20px rgba(50, 50, 50, 0.4)'
+            : '0px 6px 20px rgba(100, 200, 123, 0.4)',
           userSelect: 'none',
         }}
       >
@@ -138,7 +158,6 @@ const FarmerMessage: React.FC = () => {
           Connect with your support team quickly and easily
         </Typography>
       </Box>
-
       <Box
         sx={{
           display: { xs: 'block', md: 'flex' },
@@ -155,6 +174,7 @@ const FarmerMessage: React.FC = () => {
             flexDirection: 'column',
             borderRadius: 3,
             overflow: 'hidden',
+            backgroundColor: theme.palette.background.paper,
           }}
           aria-label="Farmer chat messages"
         >
@@ -164,11 +184,20 @@ const FarmerMessage: React.FC = () => {
               py: 2,
               px: 3,
               overflowY: 'auto',
-              backgroundColor: '#e8f5e9',
+              backgroundColor: getBgColor('#e8f5e9', '#232a2a'),
+              transition: 'background 0.2s',
             }}
           >
             {messages.length === 0 ? (
-              <Typography sx={{ textAlign: 'center', mt: 10, color: '#555' }}>No messages yet</Typography>
+              <Typography
+                sx={{
+                  textAlign: 'center',
+                  mt: 10,
+                  color: theme.palette.text.secondary,
+                }}
+              >
+                No messages yet
+              </Typography>
             ) : (
               messages.map((msg) => (
                 <Box
@@ -176,7 +205,10 @@ const FarmerMessage: React.FC = () => {
                   sx={{
                     mb: 2,
                     maxWidth: '85%',
-                    bgcolor: msg.sender === 'Farmer' ? '#a5d6a7' : '#fff',
+                    bgcolor:
+                      msg.sender === 'Farmer'
+                        ? getBgColor('#a5d6a7', '#388e3c')
+                        : getBgColor('#fff', '#424242'),
                     ml: msg.sender === 'Farmer' ? 'auto' : 2,
                     borderRadius: 2,
                     p: 2,
@@ -203,7 +235,7 @@ const FarmerMessage: React.FC = () => {
                         fontWeight: 'bold',
                         fontSize: 12,
                         color: 'white',
-                        backgroundColor: PRIORITY_COLORS[msg.priority],
+                        backgroundColor: PRIORITY_COLORS[msg.priority][theme.palette.mode],
                         px: 1.5,
                         py: 0.6,
                         borderRadius: 1,
@@ -220,7 +252,10 @@ const FarmerMessage: React.FC = () => {
                       position: 'absolute',
                       bottom: 4,
                       right: 8,
-                      color: 'rgba(0,0,0,0.45)',
+                      color:
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(255,255,255,0.45)'
+                          : 'rgba(0,0,0,0.45)',
                       fontSize: 10,
                     }}
                   >
@@ -236,7 +271,8 @@ const FarmerMessage: React.FC = () => {
               display: 'flex',
               p: 2,
               gap: 1,
-              backgroundColor: '#c8e6c9',
+              backgroundColor: getBgColor('#c8e6c9', '#263238'),
+              transition: 'background 0.2s',
             }}
           >
             <TextField
@@ -247,6 +283,11 @@ const FarmerMessage: React.FC = () => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               aria-label="Type your message"
+              sx={{
+                input: { color: theme.palette.text.primary },
+                backgroundColor: theme.palette.background.default,
+                borderRadius: 1,
+              }}
             />
             <Button
               variant="contained"
@@ -259,7 +300,6 @@ const FarmerMessage: React.FC = () => {
             </Button>
           </Box>
         </Paper>
-
         {/* Support Request Area */}
         <Paper
           elevation={4}
@@ -267,15 +307,21 @@ const FarmerMessage: React.FC = () => {
             width: { xs: '100%', md: 380 },
             borderRadius: 3,
             p: 3,
-            backgroundColor: '#f1f8e9',
+            backgroundColor: getBgColor('#f1f8e9', '#263238'),
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'start',
             userSelect: 'none',
+            minHeight: 400,
           }}
           aria-label="Support request form"
         >
-          <Typography variant="h6" fontWeight="700" mb={2} color="#33691e">
+          <Typography
+            variant="h6"
+            fontWeight="700"
+            mb={2}
+            color={theme.palette.mode === 'dark' ? '#aed581' : '#33691e'}
+          >
             Support Request Form
           </Typography>
           <FormControl sx={{ mb: 2 }} fullWidth required>
@@ -284,11 +330,13 @@ const FarmerMessage: React.FC = () => {
               labelId="issue-type-label"
               value={supportForm.issueType}
               label="Issue Type"
-              onChange={(e) => setSupportForm(prev => ({ ...prev, issueType: e.target.value }))}
+              onChange={(e) => setSupportForm((prev) => ({ ...prev, issueType: e.target.value }))}
               aria-required="true"
             >
-              {ISSUE_TYPES.map(type => (
-                <MenuItem key={type} value={type}>{type}</MenuItem>
+              {ISSUE_TYPES.map((type) => (
+                <MenuItem key={type} value={type}>
+                  {type}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -299,7 +347,7 @@ const FarmerMessage: React.FC = () => {
             fullWidth
             required
             value={supportForm.description}
-            onChange={(e) => setSupportForm(prev => ({ ...prev, description: e.target.value }))}
+            onChange={(e) => setSupportForm((prev) => ({ ...prev, description: e.target.value }))}
             aria-required="true"
             sx={{ mb: 2 }}
           />
@@ -309,7 +357,12 @@ const FarmerMessage: React.FC = () => {
               labelId="priority-label"
               value={supportForm.priority}
               label="Priority"
-              onChange={(e) => setSupportForm(prev => ({ ...prev, priority: e.target.value as 'Low' | 'Medium' | 'High' }))}
+              onChange={(e) =>
+                setSupportForm((prev) => ({
+                  ...prev,
+                  priority: e.target.value as 'Low' | 'Medium' | 'High',
+                }))
+              }
               aria-required="true"
             >
               <MenuItem value="Low">Low</MenuItem>
@@ -333,11 +386,11 @@ const FarmerMessage: React.FC = () => {
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3500}
-        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert
-          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
           severity={snackbar.severity}
           elevation={6}
           variant="filled"

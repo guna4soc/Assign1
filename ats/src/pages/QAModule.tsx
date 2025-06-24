@@ -357,405 +357,435 @@ const QualityTest: React.FC = () => {
   }, [qualityEntries]);
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 2, md: 4 } }}>
-      {/* Header */}
-      <Paper
-        elevation={8}
+    <Box sx={{
+      minHeight: '100vh',
+      width: '100%',
+      background: theme.palette.mode === 'dark'
+        ? 'linear-gradient(135deg, #23272f 0%, #2d3748 100%)'
+        : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      py: { xs: 2, md: 4 },
+      px: { xs: 0, md: 0 },
+      fontFamily: 'Inter, Roboto, Arial, sans-serif',
+      transition: 'background 0.3s',
+    }}>
+      <Box
         sx={{
-          p: { xs: 3, md: 5 },
-          background: 'linear-gradient(90deg, #1976d2 0%, #00bcd4 100%)',
-          borderRadius: 3,
-          color: 'white',
-          boxShadow: '0 6px 18px rgba(25,118,210,0.13)',
-          textAlign: 'center',
-          mb: 4,
+          maxWidth: 1300,
+          mx: 'auto',
+          p: { xs: 2, md: 4 },
+          borderRadius: 5,
+          background: theme.palette.mode === 'dark' ? '#23272f' : '#fff',
+          boxShadow: theme.palette.mode === 'dark'
+            ? '0 8px 32px rgba(20, 20, 30, 0.40)'
+            : '0 8px 32px rgba(60, 72, 100, 0.10)',
+          border: theme.palette.mode === 'dark' ? '1px solid #353b48' : '1px solid #e3e8ee',
+          transition: 'background 0.3s, box-shadow 0.3s, border 0.3s',
         }}
       >
-        <Typography variant="h3" fontWeight="bold" sx={{ letterSpacing: 1.5 }}>
-          Quality Test Dashboard
-        </Typography>
-      </Paper>
-
-      {/* Stat Cards */}
-      <Grid container spacing={3} mb={4} justifyContent="center" alignItems="stretch">
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Paper sx={{
-            p: 2,
+        {/* HEADER */}
+        <Box
+          sx={{
             borderRadius: 3,
-            background: CARD_GRADIENTS[0],
-            color: '#fff',
+            p: 3,
+            mb: 3,
+            background: 'linear-gradient(90deg, #fffde7 0%, #ffe082 100%)', // light yellow gradient
+            color: '#b26a00', // deep amber for text
             textAlign: 'center',
-            minHeight: 90,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 6px 18px rgba(25,118,210,0.13)',
-          }}>
-            <Typography variant="subtitle2" sx={{ opacity: 0.85 }}>Total Entries</Typography>
-            <Typography variant="h4" fontWeight={700}>{totalEntries}</Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Paper sx={{
-            p: 2,
-            borderRadius: 3,
-            background: CARD_GRADIENTS[1],
-            color: '#fff',
-            textAlign: 'center',
-            minHeight: 90,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 6px 18px rgba(0,188,212,0.13)',
-          }}>
-            <Typography variant="subtitle2" sx={{ opacity: 0.85 }}>Avg Moisture %</Typography>
-            <Typography variant="h4" fontWeight={700}>{averageMoisture}</Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Paper sx={{
-            p: 2,
-            borderRadius: 3,
-            background: CARD_GRADIENTS[2],
-            color: '#fff',
-            textAlign: 'center',
-            minHeight: 90,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 6px 18px rgba(67,160,71,0.13)',
-          }}>
-            <Typography variant="subtitle2" sx={{ opacity: 0.85 }}>Avg Lacometer %</Typography>
-            <Typography variant="h4" fontWeight={700}>{averageLacometer}</Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Paper sx={{
-            p: 2,
-            borderRadius: 3,
-            background: CARD_GRADIENTS[3],
-            color: '#fff',
-            textAlign: 'center',
-            minHeight: 90,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 6px 18px rgba(29,233,182,0.13)',
-          }}>
-            <Typography variant="subtitle2" sx={{ opacity: 0.85 }}>Avg Fat %</Typography>
-            <Typography variant="h4" fontWeight={700}>{averageFat}</Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Paper sx={{
-            p: 2,
-            borderRadius: 3,
-            background: CARD_GRADIENTS[4],
-            color: '#fff',
-            textAlign: 'center',
-            minHeight: 90,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 6px 18px rgba(149,117,205,0.13)',
-          }}>
-            <Typography variant="subtitle2" sx={{ opacity: 0.85 }}>Avg SNF %</Typography>
-            <Typography variant="h4" fontWeight={700}>{averageSnf}</Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Form and Table */}
-      <Paper sx={{ p: 3, mb: 4, borderRadius: 3, boxShadow: '0 6px 15px rgba(0,191,174,0.13)' }}>
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>
-          {editIdx === null ? 'Add New Test Entry' : 'Edit Test Entry'}
-        </Typography>
-        <form onSubmit={editIdx === null ? handleAdd : (e) => { e.preventDefault(); handleSaveEdit(); }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                label="Farmer ID"
-                name="farmerId"
-                value={qualityForm.farmerId}
-                onChange={handleChange}
-                required
-                error={!!errors.farmerId}
-                helperText={errors.farmerId || 'Format: 4 uppercase letters + 3 digits, e.g. FARM001'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AssignmentIndIcon color={errors.farmerId ? 'error' : 'primary'} />
-                    </InputAdornment>
-                  ),
-                }}
-                fullWidth
-                autoComplete="off"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                label="Date"
-                name="date"
-                type="date"
-                value={qualityForm.date}
-                onChange={handleChange}
-                required
-                error={!!errors.date}
-                helperText={errors.date || 'Sample collection date'}
-                InputLabelProps={{ shrink: true }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EventIcon color={errors.date ? 'error' : 'primary'} />
-                    </InputAdornment>
-                  ),
-                }}
-                fullWidth
-                autoComplete="off"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <TextField
-                label="pH Level"
-                name="pH"
-                value={qualityForm.pH}
-                onChange={handleChange}
-                required
-                error={!!errors.pH}
-                helperText={errors.pH || '0-14'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <ScienceIcon color={errors.pH ? 'error' : 'primary'} />
-                    </InputAdornment>
-                  ),
-                }}
-                fullWidth
-                autoComplete="off"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <TextField
-                label="Moisture %"
-                name="moistureContent"
-                value={qualityForm.moistureContent}
-                onChange={handleChange}
-                required
-                error={!!errors.moistureContent}
-                helperText={errors.moistureContent || '0-100'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <WaterIcon color={errors.moistureContent ? 'error' : 'primary'} />
-                    </InputAdornment>
-                  ),
-                }}
-                fullWidth
-                autoComplete="off"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <TextField
-                label="Lacometer %"
-                name="lacometer"
-                value={qualityForm.lacometer}
-                onChange={handleChange}
-                required
-                error={!!errors.lacometer}
-                helperText={errors.lacometer || '0-30'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SpeedIcon color={errors.lacometer ? 'error' : 'primary'} />
-                    </InputAdornment>
-                  ),
-                }}
-                fullWidth
-                autoComplete="off"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <TextField
-                label="Fat %"
-                name="fat"
-                value={qualityForm.fat}
-                onChange={handleChange}
-                required
-                error={!!errors.fat}
-                helperText={errors.fat || '0-20'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LocalDrinkIcon color={errors.fat ? 'error' : 'primary'} />
-                    </InputAdornment>
-                  ),
-                }}
-                fullWidth
-                autoComplete="off"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <TextField
-                label="SNF %"
-                name="snf"
-                value={qualityForm.snf}
-                onChange={handleChange}
-                required
-                error={!!errors.snf}
-                helperText={errors.snf || '0-20'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LocalDrinkIcon color={errors.snf ? 'error' : 'primary'} />
-                    </InputAdornment>
-                  ),
-                }}
-                fullWidth
-                autoComplete="off"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <TextField
-                select
-                label="Contaminants"
-                name="contaminants"
-                value={qualityForm.contaminants}
-                onChange={handleChange}
-                required
-                error={!!errors.contaminants}
-                helperText={errors.contaminants || ''}
-                fullWidth
-              >
-                <MenuItem value="None">None</MenuItem>
-                <MenuItem value="Low">Low</MenuItem>
-                <MenuItem value="Moderate">Moderate</MenuItem>
-                <MenuItem value="High">High</MenuItem>
-              </TextField>
-            </Grid>
+            boxShadow: 2,
+            letterSpacing: 1,
+            transition: 'background 0.3s',
+          }}
+        >
+          <Typography variant="h4" fontWeight="bold" sx={{ fontFamily: 'inherit', letterSpacing: 2 }}>
+            Quality Test Dashboard
+          </Typography>
+        </Box>
+        {/* Stat Cards */}
+        <Grid container spacing={2} mb={3} justifyContent="center" alignItems="stretch">
+          <Grid item xs={12} md={4}>
+            <Paper sx={{
+              p: 2,
+              borderRadius: 3,
+              background: CARD_GRADIENTS[0],
+              color: '#fff',
+              textAlign: 'center',
+              minHeight: 80,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(25,118,210,0.13)',
+              mb: { xs: 1, md: 0 },
+            }}>
+              <Typography variant="subtitle2" sx={{ opacity: 0.85, fontSize: 14 }}>Total Entries</Typography>
+              <Typography variant="h5" fontWeight={700}>{totalEntries}</Typography>
+            </Paper>
           </Grid>
-          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              disabled={!canSubmit()}
-            >
-              {editIdx === null ? 'Add Entry' : 'Save'}
-            </Button>
-            {editIdx !== null && (
+          <Grid item xs={12} md={4}>
+            <Paper sx={{
+              p: 2,
+              borderRadius: 3,
+              background: CARD_GRADIENTS[1],
+              color: '#fff',
+              textAlign: 'center',
+              minHeight: 80,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(0,188,212,0.13)',
+              mb: { xs: 1, md: 0 },
+            }}>
+              <Typography variant="subtitle2" sx={{ opacity: 0.85, fontSize: 14 }}>Avg Moisture %</Typography>
+              <Typography variant="h5" fontWeight={700}>{averageMoisture}</Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{
+              p: 2,
+              borderRadius: 3,
+              background: CARD_GRADIENTS[2],
+              color: '#fff',
+              textAlign: 'center',
+              minHeight: 80,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(67,160,71,0.13)',
+              mb: { xs: 1, md: 0 },
+            }}>
+              <Typography variant="subtitle2" sx={{ opacity: 0.85, fontSize: 14 }}>Avg Lacometer %</Typography>
+              <Typography variant="h5" fontWeight={700}>{averageLacometer}</Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{
+              p: 2,
+              borderRadius: 3,
+              background: CARD_GRADIENTS[3],
+              color: '#fff',
+              textAlign: 'center',
+              minHeight: 80,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(29,233,182,0.13)',
+              mb: { xs: 1, md: 0 },
+            }}>
+              <Typography variant="subtitle2" sx={{ opacity: 0.85, fontSize: 14 }}>Avg Fat %</Typography>
+              <Typography variant="h5" fontWeight={700}>{averageFat}</Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{
+              p: 2,
+              borderRadius: 3,
+              background: CARD_GRADIENTS[4],
+              color: '#fff',
+              textAlign: 'center',
+              minHeight: 80,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(149,117,205,0.13)',
+              mb: { xs: 1, md: 0 },
+            }}>
+              <Typography variant="subtitle2" sx={{ opacity: 0.85, fontSize: 14 }}>Avg SNF %</Typography>
+              <Typography variant="h5" fontWeight={700}>{averageSnf}</Typography>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* Form and Table */}
+        <Paper sx={{ p: 3, mb: 4, borderRadius: 3, boxShadow: '0 6px 15px rgba(0,191,174,0.13)' }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>
+            {editIdx === null ? 'Add New Test Entry' : 'Edit Test Entry'}
+          </Typography>
+          <form onSubmit={editIdx === null ? handleAdd : (e) => { e.preventDefault(); handleSaveEdit(); }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  label="Farmer ID"
+                  name="farmerId"
+                  value={qualityForm.farmerId}
+                  onChange={handleChange}
+                  required
+                  error={!!errors.farmerId}
+                  helperText={errors.farmerId || 'Format: 4 uppercase letters + 3 digits, e.g. FARM001'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AssignmentIndIcon color={errors.farmerId ? 'error' : 'primary'} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  fullWidth
+                  autoComplete="off"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  label="Date"
+                  name="date"
+                  type="date"
+                  value={qualityForm.date}
+                  onChange={handleChange}
+                  required
+                  error={!!errors.date}
+                  helperText={errors.date || 'Sample collection date'}
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EventIcon color={errors.date ? 'error' : 'primary'} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  fullWidth
+                  autoComplete="off"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <TextField
+                  label="pH Level"
+                  name="pH"
+                  value={qualityForm.pH}
+                  onChange={handleChange}
+                  required
+                  error={!!errors.pH}
+                  helperText={errors.pH || '0-100'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <ScienceIcon color={errors.pH ? 'error' : 'primary'} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  fullWidth
+                  autoComplete="off"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <TextField
+                  label="Moisture %"
+                  name="moistureContent"
+                  value={qualityForm.moistureContent}
+                  onChange={handleChange}
+                  required
+                  error={!!errors.moistureContent}
+                  helperText={errors.moistureContent || '0-100'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <WaterIcon color={errors.moistureContent ? 'error' : 'primary'} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  fullWidth
+                  autoComplete="off"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <TextField
+                  label="Lacometer %"
+                  name="lacometer"
+                  value={qualityForm.lacometer}
+                  onChange={handleChange}
+                  required
+                  error={!!errors.lacometer}
+                  helperText={errors.lacometer || '0-100'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SpeedIcon color={errors.lacometer ? 'error' : 'primary'} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  fullWidth
+                  autoComplete="off"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <TextField
+                  label="Fat %"
+                  name="fat"
+                  value={qualityForm.fat}
+                  onChange={handleChange}
+                  required
+                  error={!!errors.fat}
+                  helperText={errors.fat || '0-100'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LocalDrinkIcon color={errors.fat ? 'error' : 'primary'} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  fullWidth
+                  autoComplete="off"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <TextField
+                  label="SNF %"
+                  name="snf"
+                  value={qualityForm.snf}
+                  onChange={handleChange}
+                  required
+                  error={!!errors.snf}
+                  helperText={errors.snf || '0-100'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LocalDrinkIcon color={errors.snf ? 'error' : 'primary'} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  fullWidth
+                  autoComplete="off"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <TextField
+                  select
+                  label="Contaminants"
+                  name="contaminants"
+                  value={qualityForm.contaminants}
+                  onChange={handleChange}
+                  required
+                  error={!!errors.contaminants}
+                  helperText={errors.contaminants || ''}
+                  fullWidth
+                >
+                  <MenuItem value="None">None</MenuItem>
+                  <MenuItem value="Low">Low</MenuItem>
+                  <MenuItem value="Moderate">Moderate</MenuItem>
+                  <MenuItem value="High">High</MenuItem>
+                </TextField>
+              </Grid>
+            </Grid>
+            <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
               <Button
-                variant="outlined"
-                color="secondary"
-                onClick={() => {
-                  setEditIdx(null);
-                  setQualityForm({
-                    farmerId: '',
-                    date: '',
-                    pH: '',
-                    moistureContent: '',
-                    contaminants: 'None',
-                    lacometer: '',
-                    fat: '',
-                    snf: '',
-                  });
-                }}
+                variant="contained"
+                color="primary"
+                type="submit"
+                disabled={!canSubmit()}
               >
-                Cancel
+                {editIdx === null ? 'Add Entry' : 'Save'}
               </Button>
-            )}
-          </Stack>
-        </form>
-      </Paper>
-
-      {/* Table */}
-      <Paper sx={{ p: 2, mb: 5, borderRadius: 3, boxShadow: '0 4px 10px rgba(0,191,174,0.12)' }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#1976d2' }}>Entries</Typography>
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Farmer ID</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>pH</TableCell>
-                <TableCell>Moisture %</TableCell>
-                <TableCell>Lacometer %</TableCell>
-                <TableCell>Fat %</TableCell>
-                <TableCell>SNF %</TableCell>
-                <TableCell>Contaminants</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {qualityEntries.map((entry, idx) => (
-                <TableRow key={idx} hover>
-                  <TableCell>{entry.farmerId}</TableCell>
-                  <TableCell>{entry.date}</TableCell>
-                  <TableCell>{entry.pH}</TableCell>
-                  <TableCell>{entry.moistureContent}</TableCell>
-                  <TableCell>{entry.lacometer}</TableCell>
-                  <TableCell>{entry.fat}</TableCell>
-                  <TableCell>{entry.snf}</TableCell>
-                  <TableCell>{entry.contaminants}</TableCell>
-                  <TableCell align="center">
-                    <Stack direction="row" spacing={1} justifyContent="center">
-                      <Tooltip title="Edit">
-                        <IconButton size="small" onClick={() => handleEdit(idx)}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="small" color="error" onClick={() => handleDelete(idx)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {qualityEntries.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ color: 'text.secondary' }}>
-                    No entries found.
-                  </TableCell>
-                </TableRow>
+              {editIdx !== null && (
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={() => {
+                    setEditIdx(null);
+                    setQualityForm({
+                      farmerId: '',
+                      date: '',
+                      pH: '',
+                      moistureContent: '',
+                      contaminants: 'None',
+                      lacometer: '',
+                      fat: '',
+                      snf: '',
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+            </Stack>
+          </form>
+        </Paper>
 
-      {/* Visualizations */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 2, borderRadius: 3, background: '#e0f7fa' }}>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Contaminants Distribution</Typography>
-            <div style={{ height: 200 }}>
-              <Pie data={pieChartData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />
-            </div>
-          </Paper>
+        {/* Table */}
+        <Paper sx={{ p: 2.5, mb: 5, borderRadius: 3, boxShadow: '0 4px 16px rgba(0,191,174,0.12)', border: '1px solid #e3e8ee' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#1976d2', letterSpacing: 1 }}>Entries</Typography>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ background: 'linear-gradient(90deg, #e3f0ff 0%, #f5f7fa 100%)' }}>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#1a237e', fontSize: 15, letterSpacing: 1, borderBottom: '2px solid #90caf9' }}>Farmer ID</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#1a237e', fontSize: 15, letterSpacing: 1, borderBottom: '2px solid #90caf9' }}>Date</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#1a237e', fontSize: 15, letterSpacing: 1, borderBottom: '2px solid #90caf9' }}>pH</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#1a237e', fontSize: 15, letterSpacing: 1, borderBottom: '2px solid #90caf9' }}>Moisture %</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#1a237e', fontSize: 15, letterSpacing: 1, borderBottom: '2px solid #90caf9' }}>Lacometer %</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#1a237e', fontSize: 15, letterSpacing: 1, borderBottom: '2px solid #90caf9' }}>Fat %</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#1a237e', fontSize: 15, letterSpacing: 1, borderBottom: '2px solid #90caf9' }}>SNF %</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#1a237e', fontSize: 15, letterSpacing: 1, borderBottom: '2px solid #90caf9' }}>Contaminants</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#1a237e', fontSize: 15, letterSpacing: 1, borderBottom: '2px solid #90caf9' }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {qualityEntries.map((entry, idx) => (
+                  <TableRow key={idx} hover>
+                    <TableCell align="center">{entry.farmerId}</TableCell>
+                    <TableCell align="center">{entry.date}</TableCell>
+                    <TableCell align="center">{entry.pH}</TableCell>
+                    <TableCell align="center">{entry.moistureContent}</TableCell>
+                    <TableCell align="center">{entry.lacometer}</TableCell>
+                    <TableCell align="center">{entry.fat}</TableCell>
+                    <TableCell align="center">{entry.snf}</TableCell>
+                    <TableCell align="center">{entry.contaminants}</TableCell>
+                    <TableCell align="center">
+                      <Stack direction="row" spacing={1} justifyContent="center">
+                        <Tooltip title="Edit">
+                          <IconButton size="small" onClick={() => handleEdit(idx)}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton size="small" color="error" onClick={() => handleDelete(idx)}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {qualityEntries.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center" sx={{ color: 'text.secondary' }}>
+                      No entries found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+
+        {/* Visualizations */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 2, borderRadius: 3, background: '#e0f7fa' }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Contaminants Distribution</Typography>
+              <div style={{ height: 200 }}>
+                <Pie data={pieChartData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />
+              </div>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 2, borderRadius: 3, background: '#e3f2fd' }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Fat & SNF Trends</Typography>
+              <div style={{ height: 200 }}>
+                <Line data={fatSnfLineChartData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />
+              </div>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 2, borderRadius: 3, background: '#e0f7fa' }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Lacometer Trend</Typography>
+              <div style={{ height: 200 }}>
+                <Line data={lacometerLineChartData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />
+              </div>
+            </Paper>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 2, borderRadius: 3, background: '#e3f2fd' }}>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Fat & SNF Trends</Typography>
-            <div style={{ height: 200 }}>
-              <Line data={fatSnfLineChartData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />
-            </div>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 2, borderRadius: 3, background: '#e0f7fa' }}>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Lacometer Trend</Typography>
-            <div style={{ height: 200 }}>
-              <Line data={lacometerLineChartData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />
-            </div>
-          </Paper>
-        </Grid>
-      </Grid>
+      </Box>
     </Box>
   );
 };

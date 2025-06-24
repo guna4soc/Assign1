@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Typography,
   Paper,
@@ -46,6 +46,7 @@ import {
 } from 'recharts';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import MenuItem from '@mui/material/MenuItem';
 
 // Inventory item interface
 interface InventoryItem {
@@ -58,9 +59,14 @@ interface InventoryItem {
   reorderLevel: number;
   location?: string;
   expirationDate?: string;
-  batchNumber?: string;
+  farmerId?: string;
   lastRestockDate?: string;
   lastStockOutDate?: string;
+}
+
+// Add categoryManual to InventoryItem type for local use in edit dialog
+interface InventoryItemWithManual extends InventoryItem {
+  categoryManual?: string;
 }
 
 // Initial inventory data
@@ -75,7 +81,7 @@ const initialInventory: InventoryItem[] = [
     reorderLevel: 20,
     location: 'Warehouse A',
     expirationDate: '2024-11-30',
-    batchNumber: 'ABCD123',
+    farmerId: 'ABCD123',
     lastRestockDate: '2024-04-15',
   },
   {
@@ -88,7 +94,7 @@ const initialInventory: InventoryItem[] = [
     reorderLevel: 15,
     location: 'Warehouse A',
     expirationDate: '2024-12-15',
-    batchNumber: 'EFGH234',
+    farmerId: 'EFGH234',
     lastStockOutDate: '2024-04-14',
   },
   {
@@ -101,32 +107,33 @@ const initialInventory: InventoryItem[] = [
     reorderLevel: 10,
     location: 'Warehouse B',
     expirationDate: '2024-10-05',
-    batchNumber: 'IJKL345',
+    farmerId: 'IJKL345',
     lastRestockDate: '2024-04-12',
   },
 ];
 
-// Cool color palette for cards and charts
+// Color palettes
 const CARD_COLORS = ['#1976d2', '#00bcd4', '#43a047'];
 const PIE_COLORS = ['#1976d2', '#00bcd4', '#43a047', '#00bfae', '#1de9b6', '#00e5ff'];
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  background: 'linear-gradient(90deg, #1e3c72 0%, #2a5298 100%)',
-  color: '#fff',
+  background: 'linear-gradient(90deg, #b3e5fc 0%, #e1f5fe 100%)',
+  color: '#1a237e', // deep blue for official, readable header text
   position: 'sticky',
   top: 0,
   zIndex: theme.zIndex.drawer + 1,
   borderBottomLeftRadius: 18,
   borderBottomRightRadius: 18,
   minHeight: 80,
-  boxShadow: '0 2px 12px rgba(30,60,114,0.07)',
+  boxShadow: '0 2px 12px rgba(30,60,114,0.13)',
+  borderBottom: '3px solid #4fc3f7',
 }));
 
 const Title = styled(Typography)(({ theme }) => ({
   fontWeight: 900,
   fontSize: 38,
   textAlign: 'center',
-  color: '#fff',
+  color: '#1a237e', // deep blue for official, readable header text
   letterSpacing: 1.5,
   userSelect: 'none',
   lineHeight: 1.1,
@@ -166,13 +173,14 @@ const SummaryCard = styled(Paper)<{ bgcolor?: string }>(({ bgcolor }) => ({
   textAlign: 'center',
   userSelect: 'none',
   minHeight: 70,
-  background: bgcolor || '#fff',
+  background: bgcolor || '#f8fafc', // Use bgcolor if provided, else fallback
   color: '#fff',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
   transition: 'transform 0.3s',
+  border: '1.5px solid #1976d2',
   '&:hover': {
     transform: 'translateY(-2px) scale(1.01)',
     boxShadow: '0 8px 24px rgba(0,191,174,0.13)',
@@ -207,10 +215,32 @@ const ActionStack = styled(Stack)({
   justifyContent: 'center',
 });
 
+// LocalStorage key
+const LOCAL_STORAGE_KEY = 'inventory_dashboard_data';
+
+// Place this inside InventoryDashboard component, before useEffect and return
+const PRODUCT_CATEGORY_MAP: Record<string, string> = {
+  Cheese: 'Dairy',
+  Butter: 'Dairy',
+  Milk: 'Dairy',
+  Panneer: 'Dairy',
+  Bread: 'Bakery',
+};
+
 const InventoryDashboard: React.FC = () => {
   const theme = useTheme();
-  const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory);
-  const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id'>>({
+
+  // Persistent inventory state
+  const [inventory, setInventory] = useState<InventoryItem[]>(() => {
+    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return data ? JSON.parse(data) : initialInventory;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(inventory));
+  }, [inventory]);
+
+  const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id'> & { categoryManual?: string }>({
     productName: '',
     category: '',
     stockQuantity: 0,
@@ -219,15 +249,30 @@ const InventoryDashboard: React.FC = () => {
     reorderLevel: 10,
     location: '',
     expirationDate: '',
-    batchNumber: '',
+    farmerId: '',
+    categoryManual: '',
   });
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
-  const [editItem, setEditItem] = useState<InventoryItem | null>(null);
+  const [editItem, setEditItem] = useState<InventoryItemWithManual | null>(null);
   const [alert, setAlert] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
     severity: 'success',
   });
+
+  // --- Action Buttons Color Styling ---
+  const ActionIconButton = styled(IconButton)(({ theme }) => ({
+    color: '#fff',
+    background: 'linear-gradient(90deg, #1976d2 0%, #00bcd4 100%)',
+    margin: '0 2px',
+    '&:hover': {
+      background: 'linear-gradient(90deg, #00bcd4 0%, #1976d2 100%)',
+      color: '#fff',
+      boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
+    },
+    borderRadius: 8,
+    padding: 4,
+  }));
 
   // Validation helpers
   function validateCapitalizedField(val: string, label: string, maxLength: number) {
@@ -236,9 +281,10 @@ const InventoryDashboard: React.FC = () => {
     if (!/^[A-Z][a-zA-Z\s]*$/.test(val)) return `${label} must start with a capital letter and contain only letters and spaces`;
     return '';
   }
-  function validateBatch(val: string) {
-    if (!val.trim()) return 'Batch Number is required';
-    if (!/^[A-Z]{4}\d{3}$/.test(val)) return 'Batch Number must be 4 capital letters and 3 digits (e.g. ABCD123)';
+  function validateFarmerId(val: string) {
+    if (!val.trim()) return 'Farmer ID is required';
+    if (!/^FARM\d{3}$/.test(val)) return 'Farmer ID must be in format FARM001 (4 capital letters FARM and 3 digits)';
+    if (val.length !== 7) return 'Farmer ID must be exactly 7 characters (e.g. FARM001)';
     return '';
   }
   function validateNumber(val: number, label: string) {
@@ -251,7 +297,7 @@ const InventoryDashboard: React.FC = () => {
     e.category = validateCapitalizedField(item.category, 'Category', 40);
     e.supplier = validateCapitalizedField(item.supplier || '', 'Supplier', 30);
     e.location = validateCapitalizedField(item.location || '', 'Location', 30);
-    e.batchNumber = validateBatch(item.batchNumber || '');
+    e.farmerId = validateFarmerId(item.farmerId || '');
     e.stockQuantity = validateNumber(item.stockQuantity, 'Stock Quantity');
     e.damagedStock = validateNumber(item.damagedStock, 'Damaged Stock');
     e.reorderLevel = validateNumber(item.reorderLevel, 'Reorder Level');
@@ -260,16 +306,17 @@ const InventoryDashboard: React.FC = () => {
 
   // Add Item
   const handleAddItem = () => {
-    const fieldErrors = validateAllFields(newItem);
+    const itemToAdd = { ...newItem, category: newItem.category === 'Other' ? newItem.categoryManual || '' : newItem.category };
+    const fieldErrors = validateAllFields(itemToAdd);
     setErrors(fieldErrors);
     if (Object.values(fieldErrors).some(msg => msg)) {
       setAlert({ open: true, message: 'Please fix errors before adding item.', severity: 'error' });
       return;
     }
-    const newId = (inventory.length + 1).toString();
+    const newId = (Date.now() + Math.random()).toString();
     setInventory([
       ...inventory,
-      { id: newId, ...newItem, lastRestockDate: new Date().toISOString() },
+      { id: newId, ...itemToAdd, lastRestockDate: new Date().toISOString() },
     ]);
     setNewItem({
       productName: '',
@@ -280,27 +327,43 @@ const InventoryDashboard: React.FC = () => {
       reorderLevel: 10,
       location: '',
       expirationDate: '',
-      batchNumber: '',
+      farmerId: '',
+      categoryManual: '',
     });
     setErrors({});
     setAlert({ open: true, message: 'Item added successfully!', severity: 'success' });
   };
 
   // Edit Item
-  const openEditModal = (item: InventoryItem) => setEditItem({ ...item });
-  const handleEditChange = (field: keyof InventoryItem, value: string | number) => {
+  const openEditModal = (item: InventoryItem) => {
+    setEditItem({
+      ...item,
+      categoryManual: item.category === 'Other' ? item.category : undefined,
+    });
+  };
+  const handleEditChange = (field: keyof InventoryItemWithManual, value: string | number) => {
     if (!editItem) return;
-    setEditItem({ ...editItem, [field]: value });
+    if (field === 'category' && value === 'Other') {
+      setEditItem({ ...editItem, category: value as string, categoryManual: '' });
+    } else if (field === 'categoryManual') {
+      setEditItem({ ...editItem, categoryManual: value as string });
+    } else {
+      setEditItem({ ...editItem, [field]: value });
+    }
   };
   const handleSaveEdit = () => {
     if (!editItem) return;
-    const fieldErrors = validateAllFields(editItem);
+    const itemToSave = {
+      ...editItem,
+      category: editItem.category === 'Other' ? editItem.categoryManual || '' : editItem.category,
+    };
+    const fieldErrors = validateAllFields(itemToSave);
     setErrors(fieldErrors);
     if (Object.values(fieldErrors).some(msg => msg)) {
       setAlert({ open: true, message: 'Please fix errors before saving.', severity: 'error' });
       return;
     }
-    setInventory((prev) => prev.map((item) => (item.id === editItem.id ? { ...editItem } : item)));
+    setInventory((prev) => prev.map((item) => (item.id === editItem.id ? { ...itemToSave } : item)));
     setEditItem(null);
     setErrors({});
     setAlert({ open: true, message: 'Item updated successfully!', severity: 'success' });
@@ -395,6 +458,26 @@ const InventoryDashboard: React.FC = () => {
     restockCount: item.lastRestockDate ? 1 : 0,
   }));
 
+  // When productName changes, auto-set category if mapped
+  useEffect(() => {
+    if (PRODUCT_CATEGORY_MAP[newItem.productName]) {
+      setNewItem(prev => ({ ...prev, category: PRODUCT_CATEGORY_MAP[newItem.productName] }));
+    }
+  }, [newItem.productName]);
+
+  // --- Improved Stock Trends Visualization ---
+  const stockTrendsData = (() => {
+    const trends: Record<string, Record<string, number>> = {};
+    inventory.forEach(item => {
+      if (item.lastRestockDate) {
+        const month = getMonthString(item.lastRestockDate);
+        if (!trends[month]) trends[month] = {};
+        trends[month][item.productName] = (trends[month][item.productName] || 0) + item.stockQuantity;
+      }
+    });
+    return Object.entries(trends).map(([month, products]) => ({ month, ...products }));
+  })();
+
   return (
     <>
       <CssBaseline />
@@ -405,7 +488,9 @@ const InventoryDashboard: React.FC = () => {
       </StyledAppBar>
       <Container maxWidth="lg" sx={{ pt: 5, pb: 8 }}>
         {/* Summary Cards */}
-        <Grid container spacing={3} mb={4} justifyContent="center" alignItems="stretch">
+        <Grid container spacing={3} mb={4} justifyContent="center" alignItems="stretch" sx={{
+          [theme.breakpoints.down('sm')]: { flexDirection: 'column' }
+        }}>
           <Grid item xs={12} sm={6} md={4}>
             <SummaryCard bgcolor={CARD_COLORS[0]}>
               <Typography variant="subtitle1" gutterBottom>
@@ -472,36 +557,61 @@ const InventoryDashboard: React.FC = () => {
         </Grid>
 
         {/* Add Inventory Form */}
-        <Paper sx={{ p: 3, mb: 4, borderRadius: 3, boxShadow: '0 6px 15px rgba(0,191,174,0.13)' }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Add New Inventory Item</Typography>
+        <Paper sx={{ p: 3, mb: 4, borderRadius: 3, boxShadow: '0 6px 15px rgba(0,191,174,0.13)', border: '1.5px solid #1976d2', background: '#f8fafc' }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#1976d2', letterSpacing: 1 }}>Add New Inventory Item</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6} md={3}>
-              <InputLabel>Product Name *</InputLabel>
+              <InputLabel>Product Name</InputLabel>
               <TextField
+                select
                 fullWidth
-                size="small"
                 value={newItem.productName}
                 onChange={e => setNewItem({ ...newItem, productName: e.target.value })}
                 error={!!errors.productName}
                 helperText={errors.productName}
-              />
+              >
+                <MenuItem value="">Select Product</MenuItem>
+                <MenuItem value="Cheese">Cheese</MenuItem>
+                <MenuItem value="Butter">Butter</MenuItem>
+                <MenuItem value="Milk">Milk</MenuItem>
+                <MenuItem value="Panneer">Panneer</MenuItem>
+                <MenuItem value="Bread">Bread</MenuItem>
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <InputLabel>Category *</InputLabel>
+              <InputLabel>Category</InputLabel>
               <TextField
+                select
                 fullWidth
-                size="small"
                 value={newItem.category}
                 onChange={e => setNewItem({ ...newItem, category: e.target.value })}
                 error={!!errors.category}
                 helperText={errors.category}
-              />
+                disabled={!!PRODUCT_CATEGORY_MAP[newItem.productName]}
+              >
+                <MenuItem value="">Select Category</MenuItem>
+                <MenuItem value="Dairy">Dairy</MenuItem>
+                <MenuItem value="Bakery">Bakery</MenuItem>
+                <MenuItem value="Grocery">Grocery</MenuItem>
+                <MenuItem value="Beverages">Beverages</MenuItem>
+                <MenuItem value="Other">Other (Manual Entry)</MenuItem>
+              </TextField>
+              {newItem.category === 'Other' && (
+                <TextField
+                  fullWidth
+                  sx={{ mt: 1 }}
+                  label="Enter Category"
+                  value={newItem.categoryManual || ''}
+                  onChange={e => setNewItem({ ...newItem, category: e.target.value, categoryManual: e.target.value })}
+                  error={!!errors.category}
+                  helperText={errors.category}
+                />
+              )}
             </Grid>
             <Grid item xs={12} sm={6} md={2}>
-              <InputLabel>Stock Quantity *</InputLabel>
+              <InputLabel>Stock Quantity</InputLabel>
               <TextField
                 fullWidth
-                size="small"
                 type="number"
                 value={newItem.stockQuantity}
                 onChange={e => setNewItem({ ...newItem, stockQuantity: Number(e.target.value) })}
@@ -513,7 +623,6 @@ const InventoryDashboard: React.FC = () => {
               <InputLabel>Damaged Stock</InputLabel>
               <TextField
                 fullWidth
-                size="small"
                 type="number"
                 value={newItem.damagedStock}
                 onChange={e => setNewItem({ ...newItem, damagedStock: Number(e.target.value) })}
@@ -522,10 +631,9 @@ const InventoryDashboard: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6} md={2}>
-              <InputLabel>Reorder Level *</InputLabel>
+              <InputLabel>Reorder Level</InputLabel>
               <TextField
                 fullWidth
-                size="small"
                 type="number"
                 value={newItem.reorderLevel}
                 onChange={e => setNewItem({ ...newItem, reorderLevel: Number(e.target.value) })}
@@ -534,10 +642,9 @@ const InventoryDashboard: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <InputLabel>Supplier *</InputLabel>
+              <InputLabel>Supplier</InputLabel>
               <TextField
                 fullWidth
-                size="small"
                 value={newItem.supplier}
                 onChange={e => setNewItem({ ...newItem, supplier: e.target.value })}
                 error={!!errors.supplier}
@@ -545,117 +652,133 @@ const InventoryDashboard: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <InputLabel>Location *</InputLabel>
+              <InputLabel>Location</InputLabel>
               <TextField
                 fullWidth
-                size="small"
                 value={newItem.location}
                 onChange={e => setNewItem({ ...newItem, location: e.target.value })}
                 error={!!errors.location}
                 helperText={errors.location}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <InputLabel>Batch Number *</InputLabel>
-              <TextField
-                fullWidth
-                size="small"
-                value={newItem.batchNumber}
-                onChange={e => setNewItem({ ...newItem, batchNumber: e.target.value })}
-                error={!!errors.batchNumber}
-                helperText={errors.batchNumber}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
+            <Grid item xs={12} sm={6} md={3}>
               <InputLabel>Expiration Date</InputLabel>
               <TextField
                 fullWidth
-                size="small"
                 type="date"
-                InputLabelProps={{ shrink: true }}
                 value={newItem.expirationDate}
                 onChange={e => setNewItem({ ...newItem, expirationDate: e.target.value })}
+                InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} md={2} alignSelf="flex-end">
-              <CTAButton fullWidth onClick={handleAddItem}>Add Item</CTAButton>
+            <Grid item xs={12} sm={6} md={3}>
+              <InputLabel>Farmer ID</InputLabel>
+              <TextField
+                fullWidth
+                value={newItem.farmerId}
+                onChange={e => setNewItem({ ...newItem, farmerId: e.target.value })}
+                error={!!errors.farmerId}
+                helperText={errors.farmerId}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <CTAButton onClick={handleAddItem}>Add Item</CTAButton>
             </Grid>
           </Grid>
         </Paper>
 
+        {/* Divider */}
+        <Box sx={{ my: 5, borderBottom: '2px solid #e3e3e3', width: '100%' }} />
+
         {/* Inventory Table */}
-        <Paper sx={{ p: 2, mb: 5, borderRadius: 3, boxShadow: '0 4px 10px rgba(0,191,174,0.12)' }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#1976d2' }}>Inventory</Typography>
+        <Paper sx={{ p: 3, borderRadius: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Inventory List</Typography>
           <TableContainer>
-            <Table size="small">
+            <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Stock</TableCell>
-                  <TableCell>Damaged</TableCell>
-                  <TableCell>Reorder Level</TableCell>
-                  <TableCell>Supplier</TableCell>
-                  <TableCell>Location</TableCell>
-                  <TableCell>Batch</TableCell>
-                  <TableCell>Expiration</TableCell>
-                  <TableCell align="center">Actions</TableCell>
+                <TableRow sx={{ background: 'linear-gradient(90deg, #1976d2 0%, #00bcd4 100%)' }}>
+                  <TableCell sx={{ color: '#fff', fontWeight: 700, borderRight: '2px solid #e3e3e3' }}>Product Name</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 700, borderRight: '2px solid #e3e3e3' }}>Category</TableCell>
+                  <TableCell align="center" sx={{ color: '#fff', fontWeight: 700, borderRight: '2px solid #e3e3e3' }}>Stock</TableCell>
+                  <TableCell align="center" sx={{ color: '#fff', fontWeight: 700, borderRight: '2px solid #e3e3e3' }}>Damaged</TableCell>
+                  <TableCell align="center" sx={{ color: '#fff', fontWeight: 700, borderRight: '2px solid #e3e3e3' }}>Reorder Level</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 700, borderRight: '2px solid #e3e3e3' }}>Supplier</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 700, borderRight: '2px solid #e3e3e3' }}>Location</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 700, borderRight: '2px solid #e3e3e3' }}>Expiration</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 700, borderRight: '2px solid #e3e3e3' }}>Farmer ID</TableCell>
+                  <TableCell align="center" sx={{ color: '#fff', fontWeight: 700 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {inventory.map(item => (
-                  <TableRow key={item.id} hover>
+                  <TableRow key={item.id} sx={{ '&:hover': { background: '#f1f8ff' } }}>
                     <TableCell>{item.productName}</TableCell>
                     <TableCell>{item.category}</TableCell>
-                    <TableCell>{item.stockQuantity}</TableCell>
-                    <TableCell>{item.damagedStock}</TableCell>
-                    <TableCell>{item.reorderLevel}</TableCell>
+                    <TableCell align="center">{item.stockQuantity}</TableCell>
+                    <TableCell align="center">{item.damagedStock}</TableCell>
+                    <TableCell align="center">{item.reorderLevel}</TableCell>
                     <TableCell>{item.supplier}</TableCell>
                     <TableCell>{item.location}</TableCell>
-                    <TableCell>{item.batchNumber}</TableCell>
                     <TableCell>{item.expirationDate}</TableCell>
+                    <TableCell>{item.farmerId}</TableCell>
                     <TableCell align="center">
                       <ActionStack>
                         <Tooltip title="Edit">
-                          <IconButton size="small" onClick={() => openEditModal(item)}>
-                            <EditIcon fontSize="small" />
-                          </IconButton>
+                          <ActionIconButton size="small" onClick={() => openEditModal(item)}>
+                            <EditIcon />
+                          </ActionIconButton>
                         </Tooltip>
                         <Tooltip title="Delete">
-                          <IconButton size="small" color="error" onClick={() => handleDelete(item.id)}>
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
+                          <ActionIconButton size="small" onClick={() => handleDelete(item.id)}>
+                            <DeleteIcon />
+                          </ActionIconButton>
                         </Tooltip>
                       </ActionStack>
                     </TableCell>
                   </TableRow>
                 ))}
-                {inventory.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} align="center" sx={{ color: 'text.secondary' }}>
-                      No inventory records found.
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
           </TableContainer>
         </Paper>
 
-        {/* Visualizations */}
-        <Grid container spacing={3}>
+        {/* Visualization Section */}
+        <Grid container spacing={3} mb={4} mt={4}>
           <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 2, borderRadius: 3, background: '#e0f7fa' }}>
-              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Stock by Category</Typography>
-              <ResponsiveContainer width="100%" height={180}>
+            <Paper sx={{ p: 2, borderRadius: 3, height: 320 }}>
+              <Typography variant="subtitle1" gutterBottom color="primary">Stock by Product</Typography>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart
+                  data={inventory.map(item => ({ name: item.productName, Stock: item.stockQuantity }))}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                  barCategoryGap={20}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" tick={{ fontWeight: 600, fontSize: 13 }} />
+                  <YAxis tick={{ fontWeight: 600, fontSize: 13 }} allowDecimals={false} />
+                  <ReTooltip cursor={{ fill: '#e3f2fd' }} />
+                  <Bar dataKey="Stock" fill="#1976d2" radius={[8, 8, 0, 0]} label={{ position: 'top', fill: '#1976d2', fontWeight: 700 }}>
+                    {inventory.map((entry, idx) => (
+                      <Cell key={`cell-bar-${idx}`} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 2, borderRadius: 3, height: 320 }}>
+              <Typography variant="subtitle1" gutterBottom color="primary">Product Distribution</Typography>
+              <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
-                    dataKey="value"
                     data={categoryStockData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={60}
-                    label
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    dataKey="value"
                   >
                     {categoryStockData.map((entry, idx) => (
                       <Cell key={`cell-${idx}`} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
@@ -667,132 +790,157 @@ const InventoryDashboard: React.FC = () => {
             </Paper>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 2, borderRadius: 3, background: '#e3f2fd' }}>
-              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Monthly Stock Movement</Typography>
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={monthlyStockData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+            <Paper sx={{ p: 2, borderRadius: 3, height: 320 }}>
+              <Typography variant="subtitle1" gutterBottom color="primary">Stock Trends by Product</Typography>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={stockTrendsData}>
                   <XAxis dataKey="month" />
                   <YAxis />
                   <ReTooltip />
-                  <Bar dataKey="stock" fill="#00bcd4" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 2, borderRadius: 3, background: '#e0f7fa' }}>
-              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700, color: '#1976d2' }}>Restocking Trends</Typography>
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChart data={restockTrendsData}>
-                  <XAxis dataKey="productName" />
-                  <YAxis />
-                  <ReTooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="restockCount" stroke="#1976d2" />
+                  {['Cheese', 'Butter', 'Milk', 'Panneer', 'Bread'].map((prod, idx) => (
+                    <Line key={prod} type="monotone" dataKey={prod} stroke={PIE_COLORS[idx % PIE_COLORS.length]} />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
             </Paper>
           </Grid>
         </Grid>
+
+        {/* Edit Dialog */}
+        <Dialog open={!!editItem} onClose={handleCloseEdit} maxWidth="sm" fullWidth>
+          <DialogTitle>Edit Inventory Item</DialogTitle>
+          <DialogContent>
+            {editItem && (
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                <Grid item xs={12} sm={6}>
+                  <InputLabel>Product Name</InputLabel>
+                  <TextField
+                    fullWidth
+                    value={editItem.productName}
+                    onChange={e => handleEditChange('productName', e.target.value)}
+                    error={!!errors.productName}
+                    helperText={errors.productName}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <InputLabel>Category</InputLabel>
+                  <TextField
+                    select
+                    fullWidth
+                    value={editItem.category}
+                    onChange={e => handleEditChange('category', e.target.value)}
+                    error={!!errors.category}
+                    helperText={errors.category}
+                  >
+                    <MenuItem value="">Select Category</MenuItem>
+                    <MenuItem value="Dairy">Dairy</MenuItem>
+                    <MenuItem value="Bakery">Bakery</MenuItem>
+                    <MenuItem value="Grocery">Grocery</MenuItem>
+                    <MenuItem value="Beverages">Beverages</MenuItem>
+                    <MenuItem value="Other">Other (Manual Entry)</MenuItem>
+                  </TextField>
+                  {editItem.category === 'Other' && (
+                    <TextField
+                      fullWidth
+                      sx={{ mt: 1 }}
+                      label="Enter Category"
+                      value={editItem.categoryManual || ''}
+                      onChange={e => handleEditChange('categoryManual', e.target.value)}
+                      error={!!errors.category}
+                      helperText={errors.category}
+                    />
+                  )}
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <InputLabel>Stock Quantity</InputLabel>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    value={editItem.stockQuantity}
+                    onChange={e => handleEditChange('stockQuantity', Number(e.target.value))}
+                    error={!!errors.stockQuantity}
+                    helperText={errors.stockQuantity}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <InputLabel>Damaged Stock</InputLabel>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    value={editItem.damagedStock}
+                    onChange={e => handleEditChange('damagedStock', Number(e.target.value))}
+                    error={!!errors.damagedStock}
+                    helperText={errors.damagedStock}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <InputLabel>Reorder Level</InputLabel>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    value={editItem.reorderLevel}
+                    onChange={e => handleEditChange('reorderLevel', Number(e.target.value))}
+                    error={!!errors.reorderLevel}
+                    helperText={errors.reorderLevel}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <InputLabel>Supplier</InputLabel>
+                  <TextField
+                    fullWidth
+                    value={editItem.supplier}
+                    onChange={e => handleEditChange('supplier', e.target.value)}
+                    error={!!errors.supplier}
+                    helperText={errors.supplier}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <InputLabel>Location</InputLabel>
+                  <TextField
+                    fullWidth
+                    value={editItem.location}
+                    onChange={e => handleEditChange('location', e.target.value)}
+                    error={!!errors.location}
+                    helperText={errors.location}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <InputLabel>Expiration Date</InputLabel>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    value={editItem.expirationDate}
+                    onChange={e => handleEditChange('expirationDate', e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <InputLabel>Farmer ID</InputLabel>
+                  <TextField
+                    fullWidth
+                    value={editItem.farmerId}
+                    onChange={e => handleEditChange('farmerId', e.target.value)}
+                    error={!!errors.farmerId}
+                    helperText={errors.farmerId}
+                  />
+                </Grid>
+              </Grid>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseEdit}>Cancel</Button>
+            <CTAButton onClick={handleSaveEdit}>Save</CTAButton>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar Alerts */}
+        <Snackbar open={alert.open} autoHideDuration={2500} onClose={handleCloseAlert}>
+          <Alert onClose={handleCloseAlert} severity={alert.severity} sx={{ width: '100%' }}>
+            {alert.message}
+          </Alert>
+        </Snackbar>
       </Container>
-
-      {/* Edit Dialog */}
-      <Dialog open={!!editItem} onClose={handleCloseEdit} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Inventory Item</DialogTitle>
-        <DialogContent>
-          {editItem && (
-            <Stack spacing={2}>
-              <TextField
-                label="Product Name"
-                value={editItem.productName}
-                onChange={e => handleEditChange('productName', e.target.value)}
-                fullWidth
-                error={!!errors.productName}
-                helperText={errors.productName}
-              />
-              <TextField
-                label="Category"
-                value={editItem.category}
-                onChange={e => handleEditChange('category', e.target.value)}
-                fullWidth
-                error={!!errors.category}
-                helperText={errors.category}
-              />
-              <TextField
-                label="Stock Quantity"
-                type="number"
-                value={editItem.stockQuantity}
-                onChange={e => handleEditChange('stockQuantity', Number(e.target.value))}
-                fullWidth
-                error={!!errors.stockQuantity}
-                helperText={errors.stockQuantity}
-              />
-              <TextField
-                label="Damaged Stock"
-                type="number"
-                value={editItem.damagedStock}
-                onChange={e => handleEditChange('damagedStock', Number(e.target.value))}
-                fullWidth
-                error={!!errors.damagedStock}
-                helperText={errors.damagedStock}
-              />
-              <TextField
-                label="Reorder Level"
-                type="number"
-                value={editItem.reorderLevel}
-                onChange={e => handleEditChange('reorderLevel', Number(e.target.value))}
-                fullWidth
-                error={!!errors.reorderLevel}
-                helperText={errors.reorderLevel}
-              />
-              <TextField
-                label="Supplier"
-                value={editItem.supplier}
-                onChange={e => handleEditChange('supplier', e.target.value)}
-                fullWidth
-                error={!!errors.supplier}
-                helperText={errors.supplier}
-              />
-              <TextField
-                label="Location"
-                value={editItem.location}
-                onChange={e => handleEditChange('location', e.target.value)}
-                fullWidth
-                error={!!errors.location}
-                helperText={errors.location}
-              />
-              <TextField
-                label="Batch Number"
-                value={editItem.batchNumber}
-                onChange={e => handleEditChange('batchNumber', e.target.value)}
-                fullWidth
-                error={!!errors.batchNumber}
-                helperText={errors.batchNumber}
-              />
-              <TextField
-                label="Expiration Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={editItem.expirationDate}
-                onChange={e => handleEditChange('expirationDate', e.target.value)}
-                fullWidth
-              />
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseEdit}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveEdit}>Save</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar Alert */}
-      <Snackbar open={alert.open} autoHideDuration={3500} onClose={handleCloseAlert}>
-        <Alert severity={alert.severity} onClose={handleCloseAlert} sx={{ width: '100%' }}>
-          {alert.message}
-        </Alert>
-      </Snackbar>
     </>
   );
 };

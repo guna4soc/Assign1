@@ -1,4 +1,5 @@
-  import React from "react";
+import React from "react";
+import { useTheme } from "@mui/material/styles";
 
 const cardData = [
   { title: "Active Orders", value: "48", icon: "📦", onClick: () => alert("Active Orders Clicked") },
@@ -37,6 +38,7 @@ const recentActivities = [
 const fulfillmentRate = 87;
 
 function AdminDashboard() {
+  const theme = useTheme();
   const maxValue = Math.max(...salesData.map((d) => d.value));
 
   // Calculate stroke for progress ring
@@ -51,26 +53,26 @@ function AdminDashboard() {
         minHeight: "100vh",
         margin: 0,
         padding: 0,
-        backgroundColor: "#f0f1f5", // light background color
-        color: "#333",
+        backgroundColor: theme.palette.background.default, // theme-based background
+        color: theme.palette.text.primary,
         display: "flex",
         flexDirection: "column",
-        maxWidth: "1000px", // Minimized width of the dashboard
+        // maxWidth: "1000px", // Removed to allow full width
       }}
     >
       {/* Header */}
       <header
         style={{
-          background: "#4A90E2", // blue color for header
+          background: 'linear-gradient(90deg, #dde3ea 0%, #b0bec5 100%)', // medium blue-gray gradient
           padding: "10px 20px",
-          boxShadow: "0 5px 15px rgba(0,0,0,0.7)",
+          boxShadow: "0 5px 15px rgba(0,0,0,0.07)",
           textAlign: "center",
         }}
       >
-        <h1 style={{ fontWeight: "900", fontSize: "2.5rem", margin: 0, letterSpacing: "2px", color: "#ffffff" }}>
+        <h1 style={{ fontWeight: "900", fontSize: "2.5rem", margin: 0, letterSpacing: "2px", color: '#26334d' }}>
           Admin Dashboard
         </h1>
-        <p style={{ opacity: 0.85, marginTop: "8px", fontSize: "1.1rem", color: "#e0e7ff" }}>
+        <p style={{ opacity: 0.85, marginTop: "8px", fontSize: "1.1rem", color: '#26334d' }}>
           Overview of key metrics and recent activity
         </p>
       </header>
@@ -82,39 +84,42 @@ function AdminDashboard() {
           display: "flex",
           gap: "40px",
           padding: "30px",
-          maxWidth: "1000px", // Minimized width of the dashboard
-          margin: "0 auto",
+          width: "100%", // Keep full width
           boxSizing: "border-box",
         }}
       >
         {/* Left side - Cards */}
-        <section style={{ flex: 1 }}>
+        <section style={{ flex: 1, display: "flex", flexDirection: "column", gap: "32px" }}>
           {/* Cards grid */}
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "32px",
             }}
           >
             {cardData.map(({ icon, title, value, onClick }, idx) => (
               <div
                 key={idx}
                 style={{
-                  background: "#A8E6CF", // Light green color for cards
+                  background: "#A8E6CF",
                   borderRadius: "18px",
                   boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-                  padding: "28px 24px",
+                  padding: "24px",
                   display: "flex",
                   flexDirection: "column",
-                  alignItems: "flex-start",
+                  alignItems: "center",
+                  justifyContent: "center",
                   cursor: "pointer",
                   transition: "background 0.3s ease, transform 0.3s ease",
-                  color: "#333", // text color
+                  color: "#333",
+                  minHeight: "120px",
+                  fontSize: "1.1rem",
+                  width: "100%",
                 }}
                 onClick={onClick}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#C8E6C9"; // lighter green on hover
+                  e.currentTarget.style.background = "#C8E6C9";
                   e.currentTarget.style.transform = "translateY(-6px)";
                 }}
                 onMouseLeave={(e) => {
@@ -122,9 +127,9 @@ function AdminDashboard() {
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                <div style={{ fontSize: "32px", marginBottom: "14px" }}>{icon}</div>
-                <div style={{ fontSize: "20px", fontWeight: "800", marginBottom: "8px" }}>{title}</div>
-                <div style={{ fontSize: "16px", whiteSpace: "pre-line", fontWeight: "600" }}>{value}</div>
+                <div style={{ fontSize: "32px", marginBottom: "12px" }}>{icon}</div>
+                <div style={{ fontSize: "1.2rem", fontWeight: "800", marginBottom: "6px" }}>{title}</div>
+                <div style={{ fontSize: "1rem", whiteSpace: "pre-line", fontWeight: "600", textAlign: "center" }}>{value}</div>
               </div>
             ))}
           </div>
@@ -135,14 +140,14 @@ function AdminDashboard() {
           {/* Order Fulfillment Rate */}
           <div
             style={{
-              background: "#B0BEC5", // Light dark color for order fulfillment card
+              background: "linear-gradient(90deg, #fffde7 0%, #fff9c4 100%)", // light yellow gradient
               borderRadius: "18px",
               boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
               padding: "32px",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              color: "white",
+              color: "#b26a00", // deep amber text for contrast
               flexShrink: 0,
             }}
           >
@@ -168,11 +173,11 @@ function AdminDashboard() {
                 strokeLinecap="round"
                 style={{ transition: "stroke-dashoffset 0.6s ease" }}
               />
-              <text x="80" y="90" textAnchor="middle" fontSize="36" fontWeight="700" fill="#d1fae5">
+              <text x="80" y="90" textAnchor="middle" fontSize="36" fontWeight="700" fill="#b26a00">
                 {fulfillmentRate}%
               </text>
             </svg>
-            <p style={{ marginTop: "22px", fontSize: "17px", fontWeight: "700", color: "#bbf7d0", textAlign: "center" }}>
+            <p style={{ marginTop: "22px", fontSize: "17px", fontWeight: "700", color: "#b26a00", textAlign: "center" }}>
               Orders fulfilled successfully within time
             </p>
           </div>
@@ -292,4 +297,3 @@ function AdminDashboard() {
 
 export default AdminDashboard;
 
-  

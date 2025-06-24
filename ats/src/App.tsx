@@ -15,34 +15,48 @@ import PayFlow from './pages/PayFlow'; // Updated import
 import InsightsCenter from './pages/InsightsCenter'; // Updated import
 import BuzzBox from './pages/BuzzBox'; // Updated import
 import QAModule from './pages/QAModule'; // Updated import
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import AuthPage, { AuthUser } from './components/AuthPage';
 import { ThemeContextProvider } from './types/theme/ThemeContext';
 
 const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const isAuthenticated = !!user;
+
+  if (!isAuthenticated) {
+    return (
+      <ThemeContextProvider>
+        <AuthPage onAuthSuccess={setUser} />
+      </ThemeContextProvider>
+    );
+  }
 
   return (
     <ThemeContextProvider>
       <Box sx={{ display: 'flex', bgcolor: 'background.default', color: 'text.primary', minHeight: '100vh' }}>
         <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-          <NavBar onBurgerClick={() => setSidebarOpen(!sidebarOpen)} />
+          <NavBar onBurgerClick={() => setSidebarOpen(!sidebarOpen)} user={user} setUser={setUser} />
           <Box sx={{ flexGrow: 1, p: 3, mt: '64px' }}>
             <Routes>
-  <Route path="/" element={<Navigate to="/dashboard" />} />
-  <Route path="/dashboard" element={<Dashboard />} />
-  <Route path="/farmers-portal" element={<FarmersPortal />} />
-  <Route path="/milking-zone" element={<MilkingZone />} />
-  <Route path="/distribution-network" element={<DistributionNetwork />} />
-  <Route path="/unit-tracker" element={<UnitTracker />} />
-  <Route path="/sales-grid" element={<SalesGrid />} />
-  <Route path="/stock-control" element={<StockControl />} />
-  <Route path="/team-management" element={<TeamManagement />} />
-  <Route path="/payflow" element={<PayFlow />} />
-  <Route path="/insights-center" element={<InsightsCenter />} />
-  <Route path="/buzzbox" element={<BuzzBox />} />
-  <Route path="/qa-module" element={<QAModule />} />
-</Routes>
-
+              <Route path="/" element={<Navigate to="/dashboard" />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/farmers-portal" element={<FarmersPortal />} />
+              <Route path="/milking-zone" element={<MilkingZone />} />
+              <Route path="/distribution-network" element={<DistributionNetwork />} />
+              <Route path="/unit-tracker" element={<UnitTracker />} />
+              <Route path="/sales-grid" element={<SalesGrid />} />
+              <Route path="/stock-control" element={<StockControl />} />
+              <Route path="/team-management" element={<TeamManagement />} />
+              <Route path="/payflow" element={<PayFlow />} />
+              <Route path="/insights-center" element={<InsightsCenter />} />
+              <Route path="/buzzbox" element={<BuzzBox />} />
+              <Route path="/qa-module" element={<QAModule />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="*" element={<Navigate to="/dashboard" />} />
+            </Routes>
           </Box>
         </Box>
       </Box>

@@ -1,0 +1,170 @@
+/* --- Modern Login Page Background --- */
+.auth-bg-animate {
+  min-height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  overflow: hidden;
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  background: linear-gradient(120deg, #e6f0fa 0%, #f7fbff 100%);
+}
+
+/* Large blue semi-circled blob on left/top */
+.auth-bg-animate .main-blob {
+  position: absolute;
+  top: -200px; /* adjusted for new size */
+  left: -260px; /* adjusted for new size */
+  width: 800px; /* decreased from 900px */
+  height: 670px; /* decreased from 750px */
+  background: radial-gradient(circle at 60% 60%, #00aaff 0%, #005fa3 80%);
+  border-radius: 0 0 50% 50% / 0 0 100% 100%; /* semi-circle, direction preserved */
+  opacity: 0.85;
+  filter: blur(2px);
+  box-shadow: 0 24px 120px 0 #00aaff44, 0 2px 12px #0002;
+  animation: blobFloatMain 7s ease-in-out infinite alternate;
+}
+
+@keyframes blobFloatMain {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(40px) scale(1.04); }
+}
+
+/* Floating gradient circles */
+.auth-bg-animate .float-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.7;
+  box-shadow: 0 8px 32px 0 #00eaff33, 0 2px 8px #0001;
+  pointer-events: none;
+  animation: floatAnim 8s ease-in-out infinite alternate;
+}
+.auth-bg-animate .float-circle1 {
+  width: 120px;
+  height: 120px;
+  left: 18vw;
+  top: 12vh;
+  background: linear-gradient(135deg, #00eaff 0%, #00ff99 100%);
+  animation-delay: 0s;
+}
+.auth-bg-animate .float-circle2 {
+  width: 90px;
+  height: 90px;
+  left: 8vw;
+  top: 60vh;
+  background: linear-gradient(135deg, #ff00cc 0%, #00eaff 100%);
+  animation-delay: 2s;
+}
+.auth-bg-animate .float-circle3 {
+  width: 70px;
+  height: 70px;
+  left: 38vw;
+  top: 30vh;
+  background: linear-gradient(135deg, #00ff99 0%, #005fa3 100%);
+  animation-delay: 1.5s;
+}
+.auth-bg-animate .float-circle4 {
+  width: 100px;
+  height: 100px;
+  left: 10vw;
+  top: 80vh;
+  background: linear-gradient(135deg, #00eaff 0%, #1e2a47 100%);
+  animation-delay: 3s;
+}
+@keyframes floatAnim {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-40px) scale(1.08); }
+}
+
+/* Company name and tagline center-left */
+.ats-company-block {
+  position: absolute;
+  top: 36%;
+  left: 7vw;
+  z-index: 10;
+  text-align: left;
+  color: #00334d;
+  max-width: 480px;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  opacity: 0.98;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.ats-company-block .ats-company-name {
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 2.5px;
+  background: linear-gradient(90deg, #00eaff 0%, #ff00cc 50%, #00ff99 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+  text-shadow: 0 4px 32px #00eaff99, 0 2px 8px #000b, 0 1px 0 #222, 0 0 24px #00ffe7cc;
+  animation: companyGlow 2.2s ease-in-out infinite alternate;
+}
+.ats-company-block .ats-tagline {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #005fa3;
+  letter-spacing: 1.2px;
+  margin-top: 0.5rem;
+  text-shadow: 0 2px 12px #00eaff33;
+}
+
+/* Hide old background animation elements */
+.auth-bg-animate .cyber-dots,
+.auth-bg-animate .cyber-dot,
+.auth-bg-animate .futuristic-particles,
+.auth-bg-animate .futuristic-particle,
+.auth-bg-animate .neon-lines,
+.auth-bg-animate .neon-line,
+.auth-bg-animate .holo-grid,
+.auth-bg-animate .circuit-lines,
+.auth-bg-animate .circuit-line,
+.auth-bg-animate .data-dots,
+.auth-bg-animate .data-dot,
+.auth-bg-animate .digital-lock-svg {
+  display: none !important;
+}
+
+/* Center the card beautifully and make it more modern */
+.auth-center-container {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  background: transparent;
+  pointer-events: none;
+  padding-top: 100px; /* Move card upwards */
+  box-sizing: border-box;
+  padding-right: 7vw;
+}
+
+.auth-center-container .MuiPaper-root {
+  pointer-events: auto;
+  background: none !important;
+  box-shadow: 0 8px 40px 0 #00eaff22, 0 1.5px 8px #0001, 0 0 40px 4px #00eaff22, 0 0 0 2px #00eaff22 inset;
+  border: none;
+  border-radius: 18px;
+  padding: 1.2rem 0.8rem 1.2rem 0.8rem;
+  max-width: 260px;
+  width: 100%;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: box-shadow 0.3s, border 0.3s;
+  margin: 0 1rem;
+}
+
+.auth-center-container .MuiPaper-root:hover {
+  box-shadow: 0 12px 64px 0 #00eaff33, 0 2px 12px #0002;
+  border: none;
+}

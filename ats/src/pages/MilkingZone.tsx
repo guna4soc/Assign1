@@ -54,7 +54,7 @@ const shifts = ['Morning', 'Evening'] as const;
 const DAILY_TARGET = 1000;
 
 const highlightColor = '#fffde7';
-const tableHeaderColor = '#1565c0';
+const tableHeaderColor = '#fff9c4'; // Light yellow for table headers (official, professional)
 const tableRowAltColor = '#f5fafd';
 
 const MilkCollectionDashboard: React.FC = () => {
@@ -250,8 +250,7 @@ const MilkCollectionDashboard: React.FC = () => {
         maxWidth: 1100,
         margin: 'auto',
         p: { xs: 1, sm: 2 },
-        background: 'white',
-        borderRadius: 3,
+        // Keep layout background neutral (no background)
         minHeight: '100vh',
       }}
     >
@@ -261,8 +260,8 @@ const MilkCollectionDashboard: React.FC = () => {
           p: 3,
           mb: 3,
           boxShadow: 4,
-          background: 'linear-gradient(90deg, teal 0%, #1565c0 100%)',
-          color: 'white',
+          background: 'linear-gradient(90deg, #e3fcec 0%, #b2f7ef 100%)', // Light green-teal gradient for professional, official look
+          color: '#00695c',
         }}
       >
         <Typography
@@ -271,7 +270,7 @@ const MilkCollectionDashboard: React.FC = () => {
           gutterBottom
           align="center"
           sx={{
-            color: 'white',
+            color: '#00695c',
             fontWeight: 700,
             letterSpacing: 1,
             fontSize: '22px',
@@ -294,6 +293,7 @@ const MilkCollectionDashboard: React.FC = () => {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
+              // Restore original card color
               background: '#F4D03F',
               color: '#000',
               borderRadius: 2,
@@ -420,8 +420,10 @@ const MilkCollectionDashboard: React.FC = () => {
         sx={{
           p: 3,
           mb: 2,
-          background: 'white',
-          border: '1px solid #e0e0e0',
+          // Use theme-based background for dark mode compatibility
+          background: (theme) => theme.palette.background.paper,
+          border: '1px solid',
+          borderColor: (theme) => theme.palette.divider,
           boxShadow: 2,
         }}
       >
@@ -453,13 +455,14 @@ const MilkCollectionDashboard: React.FC = () => {
             autoComplete="off"
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'white',
+                backgroundColor: theme.palette.background.paper,
               },
               '& .MuiInputLabel-root': {
                 fontSize: '14px',
               },
               '& .MuiInputBase-input': {
                 fontSize: '14px',
+                color: theme.palette.text.primary,
               },
             }}
           />
@@ -476,13 +479,14 @@ const MilkCollectionDashboard: React.FC = () => {
             InputLabelProps={{ shrink: true }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'white',
+                backgroundColor: theme.palette.background.paper,
               },
               '& .MuiInputLabel-root': {
                 fontSize: '14px',
               },
               '& .MuiInputBase-input': {
                 fontSize: '14px',
+                color: theme.palette.text.primary,
               },
             }}
           />
@@ -498,13 +502,14 @@ const MilkCollectionDashboard: React.FC = () => {
             inputProps={{ inputMode: 'decimal' }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'white',
+                backgroundColor: theme.palette.background.paper,
               },
               '& .MuiInputLabel-root': {
                 fontSize: '14px',
               },
               '& .MuiInputBase-input': {
                 fontSize: '14px',
+                color: theme.palette.text.primary,
               },
             }}
           />
@@ -518,13 +523,14 @@ const MilkCollectionDashboard: React.FC = () => {
             required
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'white',
+                backgroundColor: theme.palette.background.paper,
               },
               '& .MuiInputLabel-root': {
                 fontSize: '14px',
               },
               '& .MuiInputBase-input': {
                 fontSize: '14px',
+                color: theme.palette.text.primary,
               },
             }}
           >
@@ -576,8 +582,10 @@ const MilkCollectionDashboard: React.FC = () => {
         sx={{
           p: 2,
           mb: 3,
-          background: 'white',
-          border: '2px solid #1565c0',
+          // Use theme-based background for dark mode compatibility
+          background: (theme) => theme.palette.background.paper,
+          border: '2px solid',
+          borderColor: '#1565c0',
           boxShadow: 2,
         }}
       >
@@ -608,14 +616,14 @@ const MilkCollectionDashboard: React.FC = () => {
                 <TableRow
                   key={idx}
                   sx={{
-                    background: idx % 2 === 0 ? 'white' : tableRowAltColor,
-                    '&:hover': { background: highlightColor },
+                    background: idx % 2 === 0 ? theme.palette.background.paper : theme.palette.action.hover,
+                    '&:hover': { background: theme.palette.action.selected },
                   }}
                 >
-                  <TableCell>{entry.farmerId}</TableCell>
-                  <TableCell>{entry.date}</TableCell>
-                  <TableCell>{entry.quantity}</TableCell>
-                  <TableCell>{entry.shift}</TableCell>
+                  <TableCell sx={{ color: theme.palette.text.primary }}>{entry.farmerId}</TableCell>
+                  <TableCell sx={{ color: theme.palette.text.primary }}>{entry.date}</TableCell>
+                  <TableCell sx={{ color: theme.palette.text.primary }}>{entry.quantity}</TableCell>
+                  <TableCell sx={{ color: theme.palette.text.primary }}>{entry.shift}</TableCell>
                   <TableCell>
                     <IconButton onClick={() => handleEdit(idx)} color="primary">
                       <EditIcon />
@@ -634,7 +642,7 @@ const MilkCollectionDashboard: React.FC = () => {
       {/* CHARTS SECTION */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, background: 'white', boxShadow: 2 }}>
+          <Paper sx={{ p: 2, background: 'inherit', boxShadow: 2 }}>
             <Typography variant="h6" mb={2} fontWeight="bold" color="primary">
               Milk Collection by Date
             </Typography>
@@ -653,7 +661,7 @@ const MilkCollectionDashboard: React.FC = () => {
           </Paper>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, background: 'white', boxShadow: 2 }}>
+          <Paper sx={{ p: 2, background: 'inherit', boxShadow: 2 }}>
             <Typography variant="h6" mb={2} fontWeight="bold" color="primary">
               Milk Collection by Shift
             </Typography>

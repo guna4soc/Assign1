@@ -23,6 +23,14 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
             default: mode === 'dark' ? '#121212' : '#f6f8fa',
             paper: mode === 'dark' ? '#1e1e1e' : '#fff',
           },
+          // Custom navbar color: white in light mode, black in dark mode
+          navbar: {
+            main: mode === 'dark' ? '#000' : '#fff',
+          },
+          // Custom icon color: black in light mode, white in dark mode
+          icon: {
+            main: mode === 'dark' ? '#fff' : '#000',
+          },
         },
       }),
     [mode]
